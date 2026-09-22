@@ -14,9 +14,9 @@
 
 ### 1. Kloonaa repository
 
-git clone <repository-url>
+git clone https://github.com/TikoWorks/pedagogical-tools.git
 
-cd <projektin-nimi>
+cd pedagogical-tools
 
 ### 2. Asenna riippuvuudet
 
@@ -27,11 +27,6 @@ npm install
 Luo projektin juureen `.env.local` `.env.example`-tiedoston pohjalta.
 
 Tarvittavat Supabase-arvot saat tiimiltä.
-
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-
-`.env.local`-tiedostoa ei commitoida GitHubiin.
 
 ### 4. Käynnistä sovellus
 
