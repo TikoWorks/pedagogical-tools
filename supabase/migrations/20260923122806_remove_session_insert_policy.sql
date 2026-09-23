@@ -1,0 +1,1 @@
+DROP POLICY "Allow session creation" ON session;
