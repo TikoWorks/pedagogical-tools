@@ -88,3 +88,28 @@ export async function PATCH(request: Request) {
 
   return Response.json(data, { status: 200 });
 }
+
+//Session ja datan poistaminen
+export async function DELETE() {
+  const cookieStore = await cookies();
+  const hostToken = cookieStore.get('host_token');
+
+  if (!hostToken) {
+    return Response.json({ error: 'Host token missing' }, { status: 401 });
+  }
+
+  const { data, error } = await supabaseServer
+    .from('session')
+    .delete()
+    .eq('host_token', hostToken.value)
+    .select()
+    .single();
+
+  if (error) {
+    console.log(error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+
+  cookieStore.delete('host_token');
+  return Response.json(data, { status: 200 });
+}
