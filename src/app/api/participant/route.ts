@@ -3,12 +3,18 @@ import { supabaseServer } from '@/lib/supabaseServer';
 // Participant luominen tietokantaan
 export async function POST(request: Request) {
   const body = await request.json();
+  console.log(body);
+  console.log(body.joinCode);
 
-  //Haetaan session id join coden perusteella kannasta
+  if (typeof body.joinCode !== 'string' || body.joinCode.trim() === '') {
+    return Response.json({ error: 'Invalid join code' }, { status: 400 });
+  }
+
+  // Haetaan session id join coden perusteella kannasta
   const { data: session, error: sessionError } = await supabaseServer
     .from('session')
     .select('id')
-    .eq('join_code', body.joinCode)
+    .eq('join_code', body.joinCode.trim().toUpperCase())
     .single();
 
   if (sessionError) {
