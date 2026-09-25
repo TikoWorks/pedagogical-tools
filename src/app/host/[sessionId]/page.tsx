@@ -1,4 +1,4 @@
-import { useParams } from 'next/navigation';
+'use client';
 import { useEffect, useState } from 'react';
 
 type Session = {
@@ -9,8 +9,6 @@ type Session = {
 };
 
 export default function HostPage() {
-  const { sessionId } = useParams<{ sessionId: string }>();
-
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
 
@@ -20,7 +18,7 @@ export default function HostPage() {
   useEffect(() => {
     async function getSessionData() {
       try {
-        const response = await fetch(`/api/session/${sessionId}`, {
+        const response = await fetch(`/api/session/`, {
           method: 'GET',
         });
 
@@ -41,7 +39,7 @@ export default function HostPage() {
     getSessionData();
 
     // Funktio ajetaan komponentin alustuksessa, ja silloin jos sessionId muuttuu
-  }, [sessionId]);
+  }, []);
 
   if (!sessionData) {
     return <div>Loading...</div>;
