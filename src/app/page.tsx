@@ -1,12 +1,14 @@
 'use client';
 import Form from 'next/form';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 export default function Home() {
   const [name, setName] = useState('');
+  const router = useRouter();
   const handleSessionStart = async () => {
-    if (!name) {
+    if (!name.trim()) {
       console.error('Subject is required');
+      return;
     }
     const response = await fetch('/api/session', {
       method: 'POST',
@@ -15,7 +17,7 @@ export default function Home() {
     });
     const data = await response.json();
 
-    redirect(`/host/${data.sessionId}`);
+    router.push(`/host/${data.id}`);
   };
   return (
     <main className="flex flex-1 w-full h-full flex-col items-center">
