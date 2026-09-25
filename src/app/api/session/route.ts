@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       host_token: hostToken,
       state: 'active',
     })
-    .select()
+    .select('id, name, join_code, state')
     .single();
 
   if (error) {
@@ -52,6 +52,28 @@ export async function POST(request: Request) {
   });
 
   return Response.json(data, { status: 201 });
+}
+
+// Sessionin hakeminen
+export async function GET() {
+  const cookieStore = await cookies();
+  const hostToken = cookieStore.get('host_token');
+
+  if (!hostToken) {
+    return Response.json({ error: 'Host token missing' }, { status: 401 });
+  }
+
+  const { data, error } = await supabaseServer
+    .from('session')
+    .select('id, name, join_code, state')
+    .eq('host_token', hostToken.value)
+    .single();
+
+  if (error) {
+    return Response.json({ error: error.message }, { status: 404 });
+  }
+
+  return Response.json(data, { status: 200 });
 }
 
 // Session tilan (state) päivitys
@@ -87,7 +109,7 @@ export async function PATCH(request: Request) {
     .from('session')
     .update({ state: body.state })
     .eq('id', session.id)
-    .select()
+    .select('id, name, join_code, state')
     .single();
 
   if (error) {
@@ -110,7 +132,7 @@ export async function DELETE() {
     .from('session')
     .delete()
     .eq('host_token', hostToken.value)
-    .select()
+    .select('id, name, join_code, state')
     .single();
 
   if (error) {
