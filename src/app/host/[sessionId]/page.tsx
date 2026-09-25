@@ -48,7 +48,9 @@ export default function HostPage() {
   return (
     <main className="flex flex-1 w-full h-full flex-col items-center">
       <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-      <button className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900">
+      <button
+        className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900"
+        onClick={() => setShowQR(true)}>
         Show QR
       </button>
       {showQR && (
