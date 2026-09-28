@@ -14,7 +14,10 @@ function generateCode() {
   return code;
 }
 
-// Sessionin luominen tietokantaan
+/* ============================================================
+   SESSIONIN LUOMINEN
+   ============================================================ */
+
 export async function POST(request: Request) {
   const body = await request.json();
 
@@ -54,7 +57,10 @@ export async function POST(request: Request) {
   return Response.json(data, { status: 201 });
 }
 
-// Sessionin hakeminen
+/* ============================================================
+   SESSIONIN HAKEMINEN
+   ============================================================ */
+
 export async function GET() {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get('host_token');
@@ -76,12 +82,28 @@ export async function GET() {
   return Response.json(data, { status: 200 });
 }
 
-// Session tilan (state) päivitys
+/* ============================================================
+   SESSION PÄIVITTÄMINEN
+   ============================================================ */
+
 export async function PATCH(request: Request) {
   const body = await request.json();
 
-  if (body.state !== 'active' && body.state !== 'paused') {
+  // Validoidaan state, jos se lähetettiin
+  if (
+    body.state !== undefined &&
+    body.state !== 'active' &&
+    body.state !== 'paused'
+  ) {
     return Response.json({ error: 'Invalid session state' }, { status: 400 });
+  }
+
+  // Validoidaan name, jos se lähetettiin
+  if (
+    body.name !== undefined &&
+    (typeof body.name !== 'string' || body.name.trim() === '')
+  ) {
+    return Response.json({ error: 'Invalid session name' }, { status: 400 });
   }
 
   const cookieStore = await cookies();
@@ -104,13 +126,39 @@ export async function PATCH(request: Request) {
     return Response.json({ error: sessionError.message }, { status: 404 });
   }
 
-  // Päivitetään session tila
+  // Muodostetaan päivitettävät kentät
+  const updates: {
+    state?: 'active' | 'paused';
+    name?: string;
+  } = {};
+
+  if (body.state !== undefined) {
+    updates.state = body.state;
+  }
+
+  if (body.name !== undefined) {
+    updates.name = body.name.trim();
+  }
+
+  // Päivitetään sessio
   const { data, error } = await supabaseServer
     .from('session')
-    .update({ state: body.state })
+    .update(updates)
     .eq('id', session.id)
     .select('id, name, join_code, state')
     .single();
+
+  // Poistetaan submissionit, jos nimi ei tyhjä
+  if (body.name !== undefined) {
+    const { error: deleteError } = await supabaseServer
+      .from('submission')
+      .delete()
+      .eq('session_id', session.id);
+
+    if (deleteError) {
+      return Response.json({ error: deleteError.message }, { status: 500 });
+    }
+  }
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -119,7 +167,10 @@ export async function PATCH(request: Request) {
   return Response.json(data, { status: 200 });
 }
 
-// Session ja datan poistaminen
+/* ============================================================
+   SESSION JA SIIHEN LIITTYVÄN DATAN POISTAMINEN
+   ============================================================ */
+
 export async function DELETE() {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get('host_token');
