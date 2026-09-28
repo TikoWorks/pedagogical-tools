@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 type Session = {
   id: string;
@@ -8,9 +9,16 @@ type Session = {
   state: 'active' | 'paused';
 };
 
+type Submission = {
+  data: {
+    word: string;
+  };
+};
+
 export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
+  const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
 
   const [showQR, setShowQR] = useState(false);
 
@@ -36,10 +44,66 @@ export default function HostPage() {
       }
     }
 
+    // Haetaan submissionit kannasta
+    async function getSubmissionsData() {
+      try {
+        const response = await fetch(`/api/submission/`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch submissions: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const data = await response.json();
+        setSubmissionsData(data);
+      } catch (error) {
+        console.error('getSubmissionsData error: ', error);
+        throw error;
+      }
+    }
+
+    getSubmissionsData();
     getSessionData();
 
     // Funktio ajetaan komponentin alustuksessa, ja silloin jos sessionId muuttuu
   }, []);
+
+  // Realtime-kuuntelu uusille submissioneille
+  useEffect(() => {
+    if (!sessionData) {
+      return;
+    }
+
+    const sessionId = sessionData.id;
+
+    const channel = supabase
+      .channel(`session:${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'submission',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          setSubmissionsData((current) => [
+            ...current,
+            {
+              data: payload.new.data,
+            },
+          ]);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionData]);
 
   if (!sessionData) {
     return <div>Loading...</div>;
@@ -54,10 +118,12 @@ export default function HostPage() {
       {showQR && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowQR(false)}>
+          onClick={() => setShowQR(false)}
+        >
           <div
             className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-            onClick={(e) => e.stopPropagation()}>
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-xl font-semibold text-zinc-900 mb-6">
               Join {sessionData.name}
             </h2>
@@ -67,6 +133,11 @@ export default function HostPage() {
           </div>
         </div>
       )}
+      <div>
+        {submissionsData.map((submission, index) => (
+          <p key={index}>{submission.data.word}</p>
+        ))}
+      </div>
     </main>
   );
 }
