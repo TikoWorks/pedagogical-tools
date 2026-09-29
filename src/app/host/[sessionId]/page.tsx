@@ -9,10 +9,15 @@ type Session = {
   state: 'active' | 'paused';
 };
 
-type Submission = {
+type RawSubmission = {
   data: {
     word: string;
   };
+};
+
+type Submission = {
+  word: string;
+  count: number;
 };
 
 export default function HostPage() {
@@ -58,7 +63,26 @@ export default function HostPage() {
         }
 
         const data = await response.json();
-        setSubmissionsData(data);
+        const grouped: Submission[] = [];
+
+        data.forEach((submission: RawSubmission) => {
+          //normalisointi
+          const word = submission.data.word.trim().toLowerCase();
+
+          // Tarkistetaan, onko sana jo lisätty
+          const existing = grouped.find((item) => item.word === word);
+
+          if (existing) {
+            existing.count += 1;
+          } else {
+            grouped.push({
+              word,
+              count: 1,
+            });
+          }
+        });
+
+        setSubmissionsData(grouped);
       } catch (error) {
         console.error('getSubmissionsData error: ', error);
         throw error;
@@ -68,7 +92,7 @@ export default function HostPage() {
     getSubmissionsData();
     getSessionData();
 
-    // Funktio ajetaan komponentin alustuksessa, ja silloin jos sessionId muuttuu
+    // Funktio ajetaan komponentin alustuksessa
   }, []);
 
   // Realtime-kuuntelu uusille submissioneille
@@ -90,12 +114,29 @@ export default function HostPage() {
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          setSubmissionsData((current) => [
-            ...current,
-            {
-              data: payload.new.data,
-            },
-          ]);
+          //normalisointi
+          const word = payload.new.data.word.trim().toLowerCase();
+
+          setSubmissionsData((current) => {
+            // Tarkistetaan, onko sana jo sanapilvessä
+            const existing = current.find((item) => item.word === word);
+
+            // Jos sana löytyy, kasvatetaan sen määrää yhdellä
+            if (existing) {
+              return current.map((item) =>
+                item.word === word ? { ...item, count: item.count + 1 } : item,
+              );
+            }
+
+            //lisätään uusi sana ensimmäistä kertaa
+            return [
+              ...current,
+              {
+                word,
+                count: 1,
+              },
+            ];
+          });
         },
       )
       .subscribe();
@@ -104,6 +145,10 @@ export default function HostPage() {
       supabase.removeChannel(channel);
     };
   }, [sessionData]);
+
+  function getFontSize(count: number) {
+    return Math.min(20 + count * 4, 60);
+  }
 
   if (!sessionData) {
     return <div>Loading...</div>;
@@ -135,7 +180,9 @@ export default function HostPage() {
       )}
       <div>
         {submissionsData.map((submission, index) => (
-          <p key={index}>{submission.data.word}</p>
+          <p key={index} style={{ fontSize: getFontSize(submission.count) }}>
+            {submission.word} {submission.count}
+          </p>
         ))}
       </div>
     </main>
