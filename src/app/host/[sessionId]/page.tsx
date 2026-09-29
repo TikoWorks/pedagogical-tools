@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { QRCodeSVG } from 'qrcode.react';
 
 type Session = {
   id: string;
@@ -18,14 +19,26 @@ type RawSubmission = {
 type Submission = {
   word: string;
   count: number;
+  color: string;
 };
+
+// Sanapilvi sanojen värit
+const colors = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444'];
+
+function getRandomColor() {
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex];
+}
+
+// Fonttikoon suurennus countin mukaan
+function getFontSize(count: number) {
+  return Math.min(20 + count * 4, 60);
+}
 
 export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
-
-  const [showQR, setShowQR] = useState(false);
 
   // Session datan haku
   useEffect(() => {
@@ -78,6 +91,7 @@ export default function HostPage() {
             grouped.push({
               word,
               count: 1,
+              color: getRandomColor(),
             });
           }
         });
@@ -134,6 +148,7 @@ export default function HostPage() {
               {
                 word,
                 count: 1,
+                color: getRandomColor(),
               },
             ];
           });
@@ -146,41 +161,34 @@ export default function HostPage() {
     };
   }, [sessionData]);
 
-  function getFontSize(count: number) {
-    return Math.min(20 + count * 4, 60);
-  }
-
   if (!sessionData) {
     return <div>Loading...</div>;
   }
 
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+
   return (
     <main className="flex flex-1 w-full h-full flex-col items-center">
+      <h1 className="text-4xl font-semibold my-8">WordCloud</h1>
       <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-      <button className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900">
-        Show QR
-      </button>
-      {showQR && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowQR(false)}
-        >
-          <div
-            className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-semibold text-zinc-900 mb-6">
-              Join {sessionData.name}
-            </h2>
-            <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
-              <span className="text-zinc-600">{sessionData.join_code}</span>
-            </div>
-          </div>
+      <div
+        className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
+          <QRCodeSVG value={joinUrl} />
         </div>
-      )}
+        <p className="text-black">Scan QR code</p>
+      </div>
       <div>
         {submissionsData.map((submission, index) => (
-          <p key={index} style={{ fontSize: getFontSize(submission.count) }}>
+          <p
+            key={index}
+            style={{
+              fontSize: getFontSize(submission.count),
+              color: getRandomColor(),
+            }}
+          >
             {submission.word} {submission.count}
           </p>
         ))}
