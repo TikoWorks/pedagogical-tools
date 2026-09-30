@@ -171,36 +171,11 @@ export default function HostPage() {
     <main className="flex flex-1 w-full h-full flex-col items-center">
       <h1 className="text-4xl font-semibold my-8">WordCloud</h1>
       <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-<<<<<<< HEAD
-      <button
-        className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900"
-        onClick={() => setShowQR(true)}>
-        Show QR
-      </button>
-      {showQR && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowQR(false)}
-        >
-          <div
-            className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-semibold text-zinc-900 mb-6">
-              Join {sessionData.name}
-            </h2>
-            <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
-              <span className="text-zinc-600">{sessionData.join_code}</span>
-            </div>
-          </div>
-=======
       <div
         className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
           <QRCodeSVG value={joinUrl} />
->>>>>>> main
         </div>
         <p className="text-black">Scan QR code</p>
       </div>
@@ -211,8 +186,7 @@ export default function HostPage() {
             style={{
               fontSize: getFontSize(submission.count),
               color: getRandomColor(),
-            }}
-          >
+            }}>
             {submission.word} {submission.count}
           </p>
         ))}
