@@ -168,30 +168,29 @@ export default function HostPage() {
   const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
 
   return (
-    <main className="flex flex-1 w-full h-full flex-col items-center">
-      <h1 className="text-4xl font-semibold my-8">WordCloud</h1>
-      <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-      <div
-        className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <main className="relative min-h-screen w-full overflow-hidden">
+      <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
+
+      <div className="relative z-10 flex flex-col items-center">
+        <h1 className="text-magenta font-black text-[3.25rem]">WordCloud</h1>
+        <h1 className="">{sessionData.name}</h1>
         <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
           <QRCodeSVG value={joinUrl} />
         </div>
         <p className="text-black">Scan QR code</p>
-      </div>
-      <div>
-        {submissionsData.map((submission, index) => (
-          <p
-            key={index}
-            style={{
-              fontSize: getFontSize(submission.count),
-              color: getRandomColor(),
-            }}
-          >
-            {submission.word} {submission.count}
-          </p>
-        ))}
+        <div>
+          {submissionsData.map((submission, index) => (
+            <p
+              key={index}
+              style={{
+                fontSize: getFontSize(submission.count),
+                color: getRandomColor(),
+              }}
+            >
+              {submission.word} {submission.count}
+            </p>
+          ))}
+        </div>
       </div>
     </main>
   );
