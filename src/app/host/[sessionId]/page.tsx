@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { QRCodeSVG } from 'qrcode.react';
 
 type Session = {
   id: string;
@@ -8,11 +10,35 @@ type Session = {
   state: 'active' | 'paused';
 };
 
+type RawSubmission = {
+  data: {
+    word: string;
+  };
+};
+
+type Submission = {
+  word: string;
+  count: number;
+  color: string;
+};
+
+// Sanapilvi sanojen värit
+const colors = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444'];
+
+function getRandomColor() {
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex];
+}
+
+// Fonttikoon suurennus countin mukaan
+function getFontSize(count: number) {
+  return Math.min(20 + count * 4, 60);
+}
+
 export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
-
-  const [showQR, setShowQR] = useState(false);
+  const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
 
   // Session datan haku
   useEffect(() => {
@@ -36,28 +62,130 @@ export default function HostPage() {
       }
     }
 
+    // Haetaan submissionit kannasta
+    async function getSubmissionsData() {
+      try {
+        const response = await fetch(`/api/submission/`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch submissions: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const data = await response.json();
+        const grouped: Submission[] = [];
+
+        data.forEach((submission: RawSubmission) => {
+          //normalisointi
+          const word = submission.data.word.trim().toLowerCase();
+
+          // Tarkistetaan, onko sana jo lisätty
+          const existing = grouped.find((item) => item.word === word);
+
+          if (existing) {
+            existing.count += 1;
+          } else {
+            grouped.push({
+              word,
+              count: 1,
+              color: getRandomColor(),
+            });
+          }
+        });
+
+        setSubmissionsData(grouped);
+      } catch (error) {
+        console.error('getSubmissionsData error: ', error);
+        throw error;
+      }
+    }
+
+    getSubmissionsData();
     getSessionData();
 
-    // Funktio ajetaan komponentin alustuksessa, ja silloin jos sessionId muuttuu
+    // Funktio ajetaan komponentin alustuksessa
   }, []);
+
+  // Realtime-kuuntelu uusille submissioneille
+  useEffect(() => {
+    if (!sessionData) {
+      return;
+    }
+
+    const sessionId = sessionData.id;
+
+    const channel = supabase
+      .channel(`session:${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'submission',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          //normalisointi
+          const word = payload.new.data.word.trim().toLowerCase();
+
+          setSubmissionsData((current) => {
+            // Tarkistetaan, onko sana jo sanapilvessä
+            const existing = current.find((item) => item.word === word);
+
+            // Jos sana löytyy, kasvatetaan sen määrää yhdellä
+            if (existing) {
+              return current.map((item) =>
+                item.word === word ? { ...item, count: item.count + 1 } : item,
+              );
+            }
+
+            //lisätään uusi sana ensimmäistä kertaa
+            return [
+              ...current,
+              {
+                word,
+                count: 1,
+                color: getRandomColor(),
+              },
+            ];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionData]);
 
   if (!sessionData) {
     return <div>Loading...</div>;
   }
 
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+
   return (
     <main className="flex flex-1 w-full h-full flex-col items-center">
+      <h1 className="text-4xl font-semibold my-8">WordCloud</h1>
       <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-      <button className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900">
+<<<<<<< HEAD
+      <button
+        className="px-4 py-2 bg-zinc-700 text-zinc-200 rounded-4xl hover:cursor-pointer hover:bg-zinc-900"
+        onClick={() => setShowQR(true)}>
         Show QR
       </button>
       {showQR && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowQR(false)}>
+          onClick={() => setShowQR(false)}
+        >
           <div
             className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-            onClick={(e) => e.stopPropagation()}>
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-xl font-semibold text-zinc-900 mb-6">
               Join {sessionData.name}
             </h2>
@@ -65,8 +193,30 @@ export default function HostPage() {
               <span className="text-zinc-600">{sessionData.join_code}</span>
             </div>
           </div>
+=======
+      <div
+        className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
+          <QRCodeSVG value={joinUrl} />
+>>>>>>> main
         </div>
-      )}
+        <p className="text-black">Scan QR code</p>
+      </div>
+      <div>
+        {submissionsData.map((submission, index) => (
+          <p
+            key={index}
+            style={{
+              fontSize: getFontSize(submission.count),
+              color: getRandomColor(),
+            }}
+          >
+            {submission.word} {submission.count}
+          </p>
+        ))}
+      </div>
     </main>
   );
 }
