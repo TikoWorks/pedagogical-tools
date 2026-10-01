@@ -2,23 +2,24 @@
 
 @theme {
   --color-magenta: #e2066f;
+  --color-tumma: #000026;
 }
 
 @font-face {
   font-family: 'Poppins';
-  src: url('/fonts/Poppins-Regular.ttf') format('truetype');
+  src: url('/fonts/poppins/Poppins-Regular.ttf') format('truetype');
   font-weight: 400;
 }
 
 @font-face {
   font-family: 'Poppins';
-  src: url('/fonts/Poppins-Bold.ttf') format('truetype');
+  src: url('/fonts/poppins/Poppins-Bold.ttf') format('truetype');
   font-weight: 700;
 }
 
 @font-face {
   font-family: 'Poppins';
-  src: url('/fonts/Poppins-Black.ttf') format('truetype');
+  src: url('/fonts/poppins/Poppins-Black.ttf') format('truetype');
   font-weight: 900;
 }
 
