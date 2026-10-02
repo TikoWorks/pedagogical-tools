@@ -3,28 +3,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import HostLobbyView from '@/components/host/HostLobbyView';
 import HostGameView from '@/components/host/HostGameView';
-import type { Submission } from '@/types/submission';
-
-type Session = {
-  id: string;
-  name: string;
-  join_code: string;
-  state: 'active' | 'paused';
-};
+import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
   data: {
     word: string;
   };
 };
-
-// Sanapilvi sanojen värit
-const colors = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444'];
-
-function getRandomColor() {
-  const randomIndex = Math.floor(Math.random() * colors.length);
-  return colors[randomIndex];
-}
 
 export default function HostPage() {
   // Sessionin datan muuttuja
@@ -51,6 +36,16 @@ export default function HostPage() {
         console.error('getSessionData error: ', error);
         throw error;
       }
+    }
+
+    getSessionData();
+
+    // Funktio ajetaan komponentin alustuksessa
+  }, []);
+
+  useEffect(() => {
+    if (!sessionData) {
+      return;
     }
 
     // Haetaan submissionit kannasta
@@ -82,7 +77,6 @@ export default function HostPage() {
             grouped.push({
               word,
               count: 1,
-              color: getRandomColor(),
             });
           }
         });
@@ -95,19 +89,10 @@ export default function HostPage() {
     }
 
     getSubmissionsData();
-    getSessionData();
-
-    // Funktio ajetaan komponentin alustuksessa
-  }, []);
-
-  // Realtime-kuuntelu uusille submissioneille
-  useEffect(() => {
-    if (!sessionData) {
-      return;
-    }
 
     const sessionId = sessionData.id;
 
+    // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
       .channel(`session:${sessionId}`)
       .on(
@@ -132,14 +117,12 @@ export default function HostPage() {
                 item.word === word ? { ...item, count: item.count + 1 } : item,
               );
             }
-
             //lisätään uusi sana ensimmäistä kertaa
             return [
               ...current,
               {
                 word,
                 count: 1,
-                color: getRandomColor(),
               },
             ];
           });
@@ -156,6 +139,9 @@ export default function HostPage() {
     return <div>Loading...</div>;
   }
 
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+
+  // Pelin aloittaminen
   async function startGame() {
     try {
       const response = await fetch('/api/session', {
@@ -181,8 +167,6 @@ export default function HostPage() {
     }
   }
 
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
-
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
@@ -195,6 +179,7 @@ export default function HostPage() {
       ) : (
         <HostGameView
           sessionName={sessionData.name}
+          joinUrl={joinUrl}
           submissions={submissionsData}
         />
       )}

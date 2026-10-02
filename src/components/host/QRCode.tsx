@@ -2,14 +2,20 @@ import { QRCodeSVG } from 'qrcode.react';
 
 type QRCodeProps = {
   joinUrl: string;
+  className?: string;
+  containerClassName?: string;
 };
 
-export default function QRCode({ joinUrl }: QRCodeProps) {
+export default function QRCode({
+  joinUrl,
+  className,
+  containerClassName,
+}: QRCodeProps) {
   return (
-    <div>
-      <div className="flex h-48 w-48 items-center justify-center bg-white rounded-2xl mt-8 2xl:h-78 2xl:w-78 2xl:mt-14">
-        <QRCodeSVG className="h-42 w-42 2xl:h-68 2xl:w-68" value={joinUrl} />
-      </div>
+    <div
+      className={`flex w-fit items-center justify-center bg-white ${containerClassName}`}
+    >
+      <QRCodeSVG className={className} value={joinUrl} />
     </div>
   );
 }
