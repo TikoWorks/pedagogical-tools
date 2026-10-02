@@ -148,18 +148,6 @@ export async function PATCH(request: Request) {
     .select('id, name, join_code, state')
     .single();
 
-  // Poistetaan submissionit, jos nimi ei tyhjä
-  if (body.name !== undefined) {
-    const { error: deleteError } = await supabaseServer
-      .from('submission')
-      .delete()
-      .eq('session_id', session.id);
-
-    if (deleteError) {
-      return Response.json({ error: deleteError.message }, { status: 500 });
-    }
-  }
-
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
