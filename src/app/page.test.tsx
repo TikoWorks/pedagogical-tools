@@ -35,7 +35,7 @@ describe('Home', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
+  
   it('renders the page', () => {
     render(<Home />);
 

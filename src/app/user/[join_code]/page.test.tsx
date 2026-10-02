@@ -1,35 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import UserPage from './page';
 
-const mockGet = vi.fn();
+const mockUseSearchParams = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: mockGet,
-  }),
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
-vi.mock('next/form', () => ({
-  default: ({
-    action,
-    children,
-    ...props
-  }: {
-    action: () => Promise<unknown>;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
-    <form
-      {...props}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        await action();
-      }}>
-      {children}
-    </form>
+vi.mock('next/image', () => ({
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img {...props} />
   ),
 }));
 
@@ -37,102 +20,65 @@ describe('UserPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockGet.mockReturnValue('ABC123');
+    mockUseSearchParams.mockReturnValue({
+      get: (key: string) => (key === 'join_code' ? 'TEST123' : null),
+    });
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        json: vi.fn().mockResolvedValue({
-          id: 'participant-123',
-        }),
-      }),
-    );
+    global.fetch = vi.fn();
+
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'participant-123' }),
+    } as Response);
   });
 
-  it('renders the page correctly', () => {
+  it('renders the input view initially', () => {
     render(<UserPage />);
 
     expect(
       screen.getByRole('heading', { name: 'WordCloud' }),
     ).toBeInTheDocument();
 
-    expect(screen.getByPlaceholderText('Type here...')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
 
     expect(screen.getByText('0/25 characters')).toBeInTheDocument();
   });
 
-  it('adds a participant using the join code', async () => {
+  it('adds a participant using the join code on mount', async () => {
     render(<UserPage />);
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/participant/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: 'ABC123',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: 'TEST123' }),
       });
     });
   });
 
-  it('stores the participant id returned by the API', async () => {
-    const user = userEvent.setup();
+  it('does not add a participant when the join code is missing', () => {
+    mockUseSearchParams.mockReturnValue({
+      get: () => null,
+    });
 
     render(<UserPage />);
 
-    const input = screen.getByPlaceholderText('Type here...');
-    await user.type(input, 'hello');
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/participant/',
-        expect.any(Object),
-      );
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Send' }));
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/submission/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: 'hello',
-          participantId: 'participant-123',
-        }),
-      });
-    });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('updates the character counter when typing', async () => {
+  it('updates the input and character counter', async () => {
     const user = userEvent.setup();
 
     render(<UserPage />);
 
-    const input = screen.getByPlaceholderText('Type here...');
+    const input = screen.getByRole('textbox');
 
     await user.type(input, 'hello');
 
+    expect(input).toHaveValue('hello');
     expect(screen.getByText('5/25 characters')).toBeInTheDocument();
-  });
-
-  it('allows at most 25 characters', async () => {
-    const user = userEvent.setup();
-
-    render(<UserPage />);
-
-    const input = screen.getByPlaceholderText('Type here...');
-
-    await user.type(input, '123456789012345678901234567890');
-
-    expect(input).toHaveValue('1234567890123456789012345');
-    expect(screen.getByText('25/25 characters')).toBeInTheDocument();
   });
 
   it('disables Send when the input is empty', () => {
@@ -141,104 +87,220 @@ describe('UserPage', () => {
     expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
   });
 
-  it('enables Send when the input contains a non-whitespace character', async () => {
+  it('does not submit a whitespace-only word', async () => {
     const user = userEvent.setup();
 
     render(<UserPage />);
 
-    const input = screen.getByPlaceholderText('Type here...');
-    const sendButton = screen.getByRole('button', { name: 'Send' });
+    await user.type(screen.getByRole('textbox'), '   ');
 
-    await user.type(input, 'hello');
-
-    expect(sendButton).toBeEnabled();
-  });
-
-  it('keeps Send disabled when the input contains only whitespace', async () => {
-    const user = userEvent.setup();
-
-    render(<UserPage />);
-
-    const input = screen.getByPlaceholderText('Type here...');
-    const sendButton = screen.getByRole('button', { name: 'Send' });
-
-    await user.type(input, '   ');
-
-    expect(input).toHaveValue('   ');
-    expect(sendButton).toBeDisabled();
-  });
-
-  it('shows the clear button when there is input', async () => {
-    const user = userEvent.setup();
-
-    render(<UserPage />);
-
-    const input = screen.getByPlaceholderText('Type here...');
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
 
     expect(
-      screen.queryByRole('button', { name: 'Clear input' }),
-    ).not.toBeInTheDocument();
-
-    await user.type(input, 'hello');
-
-    expect(
-      screen.getByRole('button', { name: 'Clear input' }),
-    ).toBeInTheDocument();
+      vi.mocked(fetch).mock.calls.filter(([url]) => url === '/api/submission/'),
+    ).toHaveLength(0);
   });
 
-  it('clears the input when the clear button is clicked', async () => {
+  it('shows the clear button and clears the input', async () => {
     const user = userEvent.setup();
 
     render(<UserPage />);
 
-    const input = screen.getByPlaceholderText('Type here...');
+    const input = screen.getByRole('textbox');
 
     await user.type(input, 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Clear input' }));
+    const clearButton = screen.getByRole('button', {
+      name: 'Clear input',
+    });
+
+    expect(clearButton).toBeInTheDocument();
+
+    await user.click(clearButton);
 
     expect(input).toHaveValue('');
     expect(screen.getByText('0/25 characters')).toBeInTheDocument();
-
     expect(
       screen.queryByRole('button', { name: 'Clear input' }),
     ).not.toBeInTheDocument();
-
-    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
   });
 
-  it('submits the entered word', async () => {
+  it('submits a word successfully', async () => {
     const user = userEvent.setup();
+
+    // Override the default participant response and add
+    // a response for the submission request.
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'participant-123' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response);
 
     render(<UserPage />);
 
-    const input = screen.getByPlaceholderText('Type here...');
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
 
-    await user.type(input, 'testing');
+    await user.type(screen.getByRole('textbox'), 'hello');
 
     await user.click(screen.getByRole('button', { name: 'Send' }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/submission/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          data: 'testing',
+          data: 'hello',
           participantId: 'participant-123',
         }),
       });
     });
+
+    expect(await screen.findByText('Word sent!')).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', { name: 'Add new word' }),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
-  it('does not add a participant when join_code is missing', async () => {
-    mockGet.mockReturnValue(null);
+  it('shows the sending state while the submission is in progress', async () => {
+    const user = userEvent.setup();
+
+    let resolveSubmission!: (response: Response) => void;
+
+    const submissionPromise = new Promise<Response>((resolve) => {
+      resolveSubmission = resolve;
+    });
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'participant-123' }),
+      } as Response)
+      .mockImplementationOnce(() => submissionPromise);
 
     render(<UserPage />);
 
     await waitFor(() => {
-      expect(fetch).not.toHaveBeenCalled();
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
+
+    await user.type(screen.getByRole('textbox'), 'hello');
+
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(await screen.findByText('Sending...')).toBeInTheDocument();
+
+    expect(
+      screen.getByText('Word is being added to WordCloud'),
+    ).toBeInTheDocument();
+
+    resolveSubmission({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
+
+    expect(await screen.findByText('Word sent!')).toBeInTheDocument();
+  });
+
+  it('returns to the input view when submission fails', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'participant-123' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: 'Server error' }),
+      } as Response);
+
+    render(<UserPage />);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    await user.type(screen.getByRole('textbox'), 'hello');
+
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('textbox')).toHaveValue('hello');
+  });
+
+  it('returns to the input view when the submission request throws', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'participant-123' }),
+      } as Response)
+      .mockRejectedValueOnce(new Error('Network error'));
+
+    render(<UserPage />);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    await user.type(screen.getByRole('textbox'), 'hello');
+
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
+    });
+  });
+
+  it('allows the user to add another word after a successful submission', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'participant-123' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response);
+
+    render(<UserPage />);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    await user.type(screen.getByRole('textbox'), 'hello');
+
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(await screen.findByText('Word sent!')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Add new word' }));
+
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveValue('');
+    expect(screen.getByText('0/25 characters')).toBeInTheDocument();
+  });
+
+  it('limits the input to 25 characters', () => {
+    render(<UserPage />);
+
+    expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '25');
   });
 });

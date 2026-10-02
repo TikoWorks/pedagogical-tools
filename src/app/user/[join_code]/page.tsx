@@ -42,7 +42,7 @@ export default function UserPage() {
   async function handleAdd(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!inputWord.trim() || inputWord.trim() === '') {
+    if (!inputWord.trim()) {
       console.error('inputWord missing');
       return;
     }
