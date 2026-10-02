@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { QRCodeSVG } from 'qrcode.react';
+import HostLobbyView from '@/components/host/HostLobbyView';
+import HostGameView from '@/components/host/HostGameView';
+import type { Submission } from '@/types/submission';
 
 type Session = {
   id: string;
@@ -16,23 +18,12 @@ type RawSubmission = {
   };
 };
 
-type Submission = {
-  word: string;
-  count: number;
-  color: string;
-};
-
 // Sanapilvi sanojen värit
 const colors = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444'];
 
 function getRandomColor() {
   const randomIndex = Math.floor(Math.random() * colors.length);
   return colors[randomIndex];
-}
-
-// Fonttikoon suurennus countin mukaan
-function getFontSize(count: number) {
-  return Math.min(20 + count * 4, 60);
 }
 
 export default function HostPage() {
@@ -165,34 +156,48 @@ export default function HostPage() {
     return <div>Loading...</div>;
   }
 
+  async function startGame() {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          state: 'active',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to start game: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const updatedSession = await response.json();
+      setSessionData(updatedSession);
+    } catch (error) {
+      console.error('startGame error: ', error);
+    }
+  }
+
   const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
 
   return (
-    <main className="flex flex-1 w-full h-full flex-col items-center">
-      <h1 className="text-4xl font-semibold my-8">WordCloud</h1>
-      <h1 className="text-4xl font-semibold my-8">{sessionData.name}</h1>
-      <div
-        className="w-80 h-80 rounded-xl bg-white flex flex-col items-center justify-center shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="w-48 h-48 bg-zinc-200 flex items-center justify-center">
-          <QRCodeSVG value={joinUrl} />
-        </div>
-        <p className="text-black">Scan QR code</p>
-      </div>
-      <div>
-        {submissionsData.map((submission, index) => (
-          <p
-            key={index}
-            style={{
-              fontSize: getFontSize(submission.count),
-              color: getRandomColor(),
-            }}
-          >
-            {submission.word} {submission.count}
-          </p>
-        ))}
-      </div>
+    <main className="relative h-dvh w-full overflow-hidden">
+      <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
+      {sessionData.state === 'paused' ? (
+        <HostLobbyView
+          sessionName={sessionData.name}
+          joinUrl={joinUrl}
+          onStart={startGame}
+        />
+      ) : (
+        <HostGameView
+          sessionName={sessionData.name}
+          submissions={submissionsData}
+        />
+      )}
     </main>
   );
 }
