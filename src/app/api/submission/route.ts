@@ -97,3 +97,37 @@ export async function GET() {
 
   return Response.json(data, { status: 200 });
 }
+
+/* ============================================================
+   SUBMISSIONEIDEN POISTAMINEN
+   ============================================================ */
+
+export async function DELETE() {
+  const cookieStore = await cookies();
+  const hostToken = cookieStore.get('host_token');
+
+  if (!hostToken) {
+    return Response.json({ error: 'Host token missing' }, { status: 401 });
+  }
+
+  const { data: session, error: sessionError } = await supabaseServer
+    .from('session')
+    .select('id')
+    .eq('host_token', hostToken.value)
+    .single();
+
+  if (sessionError) {
+    return Response.json({ error: sessionError.message }, { status: 404 });
+  }
+
+  const { error } = await supabaseServer
+    .from('submission')
+    .delete()
+    .eq('session_id', session.id);
+
+  if (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+
+  return Response.json({ success: true }, { status: 200 });
+}
