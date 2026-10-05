@@ -167,6 +167,32 @@ export default function HostPage() {
     }
   }
 
+  // Session nimen vaihto
+  async function updateSessionName(name: string) {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to update session: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const updatedSession = await response.json();
+      setSessionData(updatedSession);
+    } catch (error) {
+      console.error('updateSessionName error: ', error);
+    }
+  }
+
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
@@ -175,12 +201,14 @@ export default function HostPage() {
           sessionName={sessionData.name}
           joinUrl={joinUrl}
           onStart={startGame}
+          onSessionNameChange={updateSessionName}
         />
       ) : (
         <HostGameView
           sessionName={sessionData.name}
           joinUrl={joinUrl}
           submissions={submissionsData}
+          onSessionNameChange={updateSessionName}
         />
       )}
     </main>

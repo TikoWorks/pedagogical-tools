@@ -8,19 +8,24 @@ type HostGameViewProps = {
   sessionName: string;
   joinUrl: string;
   submissions: Submission[];
+  onSessionNameChange: (name: string) => Promise<void>;
 };
 
 export default function HostGameView({
   sessionName,
   joinUrl,
   submissions,
+  onSessionNameChange,
 }: HostGameViewProps) {
   return (
     <div className="relative z-10 pt-5">
       <div className="flex items-start justify-between px-40">
         <div className="flex w-[40rem] flex-col items-center">
           <HostHeader />
-          <SessionNameInput sessionName={sessionName} />
+          <SessionNameInput
+            sessionName={sessionName}
+            onSessionNameChange={onSessionNameChange}
+          />
         </div>
 
         <div className="flex items-start gap-6 pt-6">

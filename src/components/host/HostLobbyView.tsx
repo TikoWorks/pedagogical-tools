@@ -7,12 +7,14 @@ type HostLobbyViewProps = {
   sessionName: string;
   joinUrl: string;
   onStart: () => void;
+  onSessionNameChange: (name: string) => Promise<void>;
 };
 
 export default function HostLobbyView({
   sessionName,
   joinUrl,
   onStart,
+  onSessionNameChange,
 }: HostLobbyViewProps) {
   return (
     <div className="relative z-10 flex h-full flex-col items-center pt-16">
@@ -24,7 +26,10 @@ export default function HostLobbyView({
         </p>
 
         <div className="relative mt-8 w-[20rem] min-[470px]:w-[28rem] 2xl:w-[40rem] 2xl:mt-12">
-          <SessionNameInput sessionName={sessionName} />
+          <SessionNameInput
+            sessionName={sessionName}
+            onSessionNameChange={onSessionNameChange}
+          />
         </div>
       </div>
 
