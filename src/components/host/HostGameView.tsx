@@ -3,12 +3,14 @@ import type { Submission } from '@/types';
 import HostHeader from './HostHeader';
 import QRCode from './QRCode';
 import SessionNameInput from './SessionNameInput';
+import Button from './Button';
 
 type HostGameViewProps = {
   sessionName: string;
   joinUrl: string;
   submissions: Submission[];
   onSessionNameChange: (name: string) => Promise<void>;
+  onReset: () => void;
 };
 
 export default function HostGameView({
@@ -16,6 +18,7 @@ export default function HostGameView({
   joinUrl,
   submissions,
   onSessionNameChange,
+  onReset,
 }: HostGameViewProps) {
   return (
     // Näkymä käyttää koko saatavilla olevan korkeuden
@@ -28,6 +31,10 @@ export default function HostGameView({
             sessionName={sessionName}
             onSessionNameChange={onSessionNameChange}
           />
+        </div>
+
+        <div className="mt-8 2xl:mt-12">
+          <Button onClick={onReset}>Reset</Button>
         </div>
 
         <div className="flex items-start gap-4 pt-2 xl:pt-6 2xl:gap-6">

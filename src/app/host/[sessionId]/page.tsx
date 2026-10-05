@@ -193,6 +193,25 @@ export default function HostPage() {
     }
   }
 
+  //Submissioneiden poistaminen
+  async function resetSubmissions() {
+    try {
+      const response = await fetch('/api/submission', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete submissions: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      setSubmissionsData([]);
+    } catch (error) {
+      console.error('resetSubmissions error:', error);
+    }
+  }
+
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
@@ -209,6 +228,7 @@ export default function HostPage() {
           joinUrl={joinUrl}
           submissions={submissionsData}
           onSessionNameChange={updateSessionName}
+          onReset={resetSubmissions}
         />
       )}
     </main>

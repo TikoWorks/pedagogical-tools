@@ -2,6 +2,7 @@ import QRCode from './QRCode';
 import Image from 'next/image';
 import HostHeader from './HostHeader';
 import SessionNameInput from './SessionNameInput';
+import Button from './Button';
 
 type HostLobbyViewProps = {
   sessionName: string;
@@ -44,19 +45,18 @@ export default function HostLobbyView({
       </div>
 
       {/* Käynnistää session pelinäkymän */}
-      <button
-        onClick={onStart}
-        className="mt-14 flex h-12 w-56 items-center justify-center gap-2 rounded-full bg-magenta text-[1.5rem] font-bold text-white 2xl:mt-20 2xl:h-19 2xl:w-85 2xl:text-[2.25rem]"
-      >
-        Start
-        <Image
-          className="translate-x-2 2xl:h-8 2xl:w-8"
-          src="/images/arrow.svg"
-          alt=""
-          width={20}
-          height={20}
-        />
-      </button>
+      <div className="mt-14 2xl:mt-20">
+        <Button onClick={onStart}>
+          Start
+          <Image
+            className="translate-x-2 2xl:h-8 2xl:w-8"
+            src="/images/arrow.svg"
+            alt=""
+            width={20}
+            height={20}
+          />
+        </Button>
+      </div>
     </div>
   );
 }
