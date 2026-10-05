@@ -1,114 +1,154 @@
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import cloud from 'd3-cloud';
 import type { Submission } from '@/types';
 
 type WordCloudProps = {
   submissions: Submission[];
-  width: number;
-  height: number;
 };
 
-type PlacedWord = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+type CloudWord = {
+  text: string;
+  count: number;
+  size: number;
+  color: string;
+  x?: number;
+  y?: number;
 };
 
 const colors = ['#3CD4D0', '#625BC4', '#FFFFFF', '#F562A1'];
 
-function getFontSize(count: number) {
-  return Math.min(36 + (count - 1) * 20, 128);
+// Kasvatetaan fonttikokoa sanan esiintymismäärän mukaan
+function getFontSize(count: number, scale: number) {
+  const minSize = 36;
+  const growth = 20 * scale;
+
+  return Math.min(minSize + (count - 1) * growth, 128);
 }
 
-function getHash(word: string) {
-  let hash = 0;
-
-  for (let i = 0; i < word.length; i++) {
-    hash = word.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  return Math.abs(hash);
+// Valitaan sanalle väri hash-arvon perusteella
+function getColor(index: number) {
+  return colors[index % colors.length];
 }
 
-function getColor(word: string) {
-  return colors[getHash(word) % colors.length];
+function getFontWeight(count: number) {
+  return count === 1 ? 400 : 700;
 }
 
-function getFontWeight(fontSize: number) {
-  return fontSize === 36 ? 400 : 700;
-}
+export default function WordCloud({ submissions }: WordCloudProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-function overlaps(a: PlacedWord, b: PlacedWord) {
-  const gap = 30;
+  const [size, setSize] = useState({
+    width: 0,
+    height: 0,
+  });
 
-  return (
-    a.x < b.x + b.width + gap &&
-    a.x + a.width + gap > b.x &&
-    a.y < b.y + b.height + gap &&
-    a.y + a.height + gap > b.y
-  );
-}
+  const [words, setWords] = useState<CloudWord[]>([]);
+  useEffect(() => {
+    const container = containerRef.current;
 
-export default function WordCloud({
-  submissions,
-  width,
-  height,
-}: WordCloudProps) {
-  const placedWords: PlacedWord[] = [];
+    if (!container) {
+      return;
+    }
 
-  return (
-    <div className="relative mx-auto" style={{ width, height }}>
-      {submissions.map((submission) => {
-        const fontSize = getFontSize(submission.count);
-        const wordWidth = submission.word.length * fontSize * 0.6;
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
 
-        const maxX = width - wordWidth;
-        const maxY = height - fontSize;
+      const width = Math.round(entry.contentRect.width);
+      const height = Math.round(entry.contentRect.height);
 
-        let x = getHash(submission.word) % Math.max(maxX, 1);
-        let y = (getHash(submission.word) * 31) % Math.max(maxY, 1);
-
-        let wordBox: PlacedWord = {
-          x,
-          y,
-          width: wordWidth,
-          height: fontSize,
-        };
-
-        let attempt = 1;
-
-        while (placedWords.some((word) => overlaps(wordBox, word))) {
-          x = (getHash(submission.word) + attempt * 97) % Math.max(maxX, 1);
-
-          y = (getHash(submission.word) + attempt * 53) % Math.max(maxY, 1);
-
-          wordBox = {
-            x,
-            y,
-            width: wordWidth,
-            height: fontSize,
-          };
-
-          attempt++;
+      setSize((currentSize) => {
+        if (currentSize.width === width && currentSize.height === height) {
+          return currentSize;
         }
 
-        placedWords.push(wordBox);
+        return { width, height };
+      });
+    });
 
-        return (
-          <span
-            key={submission.word}
-            className="absolute whitespace-nowrap"
-            style={{
-              left: x,
-              top: y,
-              fontSize,
-              fontWeight: getFontWeight(fontSize),
-              color: getColor(submission.word),
-            }}
-          >
-            {submission.word}
-          </span>
-        );
-      })}
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+  useEffect(() => {
+    if (submissions.length === 0 || size.width === 0 || size.height === 0) {
+      return;
+    }
+
+    const widthScale = size.width / 1600;
+    const heightScale = size.height / 480;
+    const scale = Math.min(widthScale, heightScale);
+
+    // Muutetaan submissionit d3-cloudin käyttämään muotoon
+    const cloudWords = submissions.map((submission, index) => ({
+      text: submission.word,
+      count: submission.count,
+      size: getFontSize(submission.count, scale),
+      color: getColor(index),
+    }));
+
+    let cancelled = false;
+    let layout: ReturnType<typeof cloud<CloudWord>> | undefined;
+
+    async function createCloud() {
+      // Odotetaan, että selaimen fontit ovat latautuneet
+      await document.fonts.ready;
+
+      if (cancelled) {
+        return;
+      }
+
+      // d3-cloud laskee sanoille paikat ja estää päällekkäisyyksiä
+      layout = cloud<CloudWord>()
+        .size([size.width, size.height])
+        .words(cloudWords)
+        .padding(25)
+        .spiral('archimedean')
+        .rotate(() => 0)
+        .font('Poppins')
+        .fontSize((word) => word.size)
+        .fontWeight((word) => getFontWeight(word.count))
+        .on('end', (placedWords) => {
+          if (!cancelled) {
+            setWords(placedWords);
+          }
+        });
+
+      layout.start();
+    }
+    createCloud();
+
+    return () => {
+      cancelled = true;
+      layout?.stop();
+    };
+  }, [submissions, size]);
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      {submissions.length > 0 && (
+        <svg width="100%" height="100%">
+          <g transform={`translate(${size.width / 2}, ${size.height / 2})`}>
+            {words.map((word) => (
+              <text
+                key={word.text}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                transform={`translate(${word.x ?? 0}, ${word.y ?? 0})`}
+                style={{
+                  fontFamily: 'Poppins',
+                  fontSize: word.size,
+                  fontWeight: getFontWeight(word.count),
+                  fill: word.color,
+                }}
+              >
+                {word.text}
+              </text>
+            ))}
+          </g>
+        </svg>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export default function HostGameView({
   onSessionNameChange,
 }: HostGameViewProps) {
   return (
-    <div className="relative z-10 pt-5">
+    <div className="relative z-10 flex h-full flex-col pt-5">
       <div className="flex items-start justify-between px-40">
         <div className="flex w-[40rem] flex-col items-center">
           <HostHeader />
@@ -44,8 +44,8 @@ export default function HostGameView({
         </div>
       </div>
 
-      <div className="mt-15">
-        <WordCloud submissions={submissions} width={1600} height={480} />
+      <div className="min-h-0 flex-1">
+        <WordCloud submissions={submissions} />
       </div>
     </div>
   );
