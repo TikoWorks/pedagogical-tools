@@ -18,7 +18,7 @@ type CloudWord = {
 
 const colors = ['#3CD4D0', '#625BC4', '#FFFFFF', '#F562A1'];
 
-// Kasvatetaan fonttikokoa sanan esiintymismäärän mukaan
+// Sanan koko kasvaa esiintymismäärän mukaan ja skaalautuu käytettävissä olevaan tilaan
 function getFontSize(count: number, scale: number) {
   const minSize = 36;
   const growth = 20 * scale;
@@ -26,11 +26,12 @@ function getFontSize(count: number, scale: number) {
   return Math.min(minSize + (count - 1) * growth, 128);
 }
 
-// Valitaan sanalle väri hash-arvon perusteella
+// Värit kiertävät sanojen järjestyksen mukaan
 function getColor(index: number) {
   return colors[index % colors.length];
 }
 
+// Useammin esiintyvät sanat näytetään lihavoituna
 function getFontWeight(count: number) {
   return count === 1 ? 400 : 700;
 }
@@ -44,6 +45,8 @@ export default function WordCloud({ submissions }: WordCloudProps) {
   });
 
   const [words, setWords] = useState<CloudWord[]>([]);
+
+  // Seurataan sanapilven käytettävissä olevan alueen kokoa
   useEffect(() => {
     const container = containerRef.current;
 
@@ -72,6 +75,8 @@ export default function WordCloud({ submissions }: WordCloudProps) {
       resizeObserver.disconnect();
     };
   }, []);
+
+  // Lasketaan sanojen sijoittelu uudelleen, kun sanat tai käytettävissä oleva tila muuttuvat
   useEffect(() => {
     if (submissions.length === 0 || size.width === 0 || size.height === 0) {
       return;
