@@ -23,7 +23,10 @@ export default function HostGameFooter({
         onSessionNameSave={onSessionNameSave}
       />
 
-      <Button className="w-70 border-3 border-[#F562A1]" onClick={onReset}>
+      <Button
+        className="w-70 border-3 border-[#F562A1] bg-[#0D004C] hover:bg-tumma"
+        onClick={onReset}
+      >
         <Image src="/images/reset.svg" alt="" width={25} height={25} />
         Reset
       </Button>

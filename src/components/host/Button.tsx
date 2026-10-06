@@ -13,7 +13,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`flex h-16 items-center justify-center gap-4 rounded-2xl font-bold text-white text-[1.75rem] ${className}`}
+      className={`flex h-16 items-center justify-center gap-4 rounded-2xl font-bold text-white text-[1.75rem] cursor-pointer ${className}`}
       onClick={onClick}
     >
       {children}

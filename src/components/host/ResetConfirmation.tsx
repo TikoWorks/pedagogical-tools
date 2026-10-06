@@ -24,11 +24,17 @@ export default function ResetConfirmation({
         <p>This will remove all submitted words</p>
 
         <div className="flex gap-20 pt-10">
-          <Button className="w-50 border-2 border-white" onClick={onCancel}>
+          <Button
+            className="w-50 border-2 border-white bg-[#0D004C] hover:bg-tumma"
+            onClick={onCancel}
+          >
             Cancel
           </Button>
 
-          <Button className="w-50 bg-magenta" onClick={onReset}>
+          <Button
+            className="w-50 bg-magenta hover:bg-[#AA0045]"
+            onClick={onReset}
+          >
             Reset
           </Button>
         </div>
