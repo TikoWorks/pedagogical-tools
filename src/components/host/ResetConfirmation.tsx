@@ -12,7 +12,7 @@ export default function ResetConfirmation({
 }: ResetConfirmationProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/56">
-      <section className="flex flex-col items-center rounded-2xl border-2 border-white/50 bg-[#0D004C] p-10 text-[1.75rem] text-white ">
+      <section className="flex flex-col items-center rounded-2xl border-2 border-white/50 bg-paavari p-10 text-[1.75rem] text-white ">
         <Image
           className="mb-6"
           src="/images/reset2.svg"
@@ -25,7 +25,7 @@ export default function ResetConfirmation({
 
         <div className="flex gap-20 pt-10">
           <Button
-            className="w-50 border-2 border-white bg-[#0D004C] hover:bg-tumma"
+            className="w-50 border-2 border-white bg-paavari hover:bg-tumma"
             onClick={onCancel}
           >
             Cancel
