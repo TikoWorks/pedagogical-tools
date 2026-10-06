@@ -8,8 +8,8 @@ type QRCodeProps = {
 
 export default function QRCode({
   joinUrl,
-  className,
-  containerClassName,
+  className = '',
+  containerClassName = '',
 }: QRCodeProps) {
   return (
     <div
