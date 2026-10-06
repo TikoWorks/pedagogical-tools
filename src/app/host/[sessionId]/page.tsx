@@ -1,16 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import HostLobbyView from '@/components/host/HostLobbyView';
-import HostGameView from '@/components/host/HostGameView';
-import type { Submission } from '@/types/submission';
-
-type Session = {
-  id: string;
-  name: string;
-  join_code: string;
-  state: 'active' | 'paused';
-};
+import Image from 'next/image';
+import HostGameHeader from '@/components/host/HostGameHeader';
+import HostGameFooter from '@/components/host/HostGameFooter';
+import WordCloud from '@/components/host/WordCloud';
+import ResetConfirmation from '@/components/host/ResetConfirmation';
+import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
   data: {
@@ -18,18 +14,12 @@ type RawSubmission = {
   };
 };
 
-// Sanapilvi sanojen värit
-const colors = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444'];
-
-function getRandomColor() {
-  const randomIndex = Math.floor(Math.random() * colors.length);
-  return colors[randomIndex];
-}
-
 export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
+  const [sessionName, setSessionName] = useState('');
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
   // Session datan haku
   useEffect(() => {
@@ -47,10 +37,21 @@ export default function HostPage() {
 
         const data = await response.json();
         setSessionData(data);
+        setSessionName(data.name);
       } catch (error) {
         console.error('getSessionData error: ', error);
         throw error;
       }
+    }
+
+    getSessionData();
+
+    // Funktio ajetaan komponentin alustuksessa
+  }, []);
+
+  useEffect(() => {
+    if (!sessionData) {
+      return;
     }
 
     // Haetaan submissionit kannasta
@@ -82,7 +83,6 @@ export default function HostPage() {
             grouped.push({
               word,
               count: 1,
-              color: getRandomColor(),
             });
           }
         });
@@ -95,19 +95,10 @@ export default function HostPage() {
     }
 
     getSubmissionsData();
-    getSessionData();
-
-    // Funktio ajetaan komponentin alustuksessa
-  }, []);
-
-  // Realtime-kuuntelu uusille submissioneille
-  useEffect(() => {
-    if (!sessionData) {
-      return;
-    }
 
     const sessionId = sessionData.id;
 
+    // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
       .channel(`session:${sessionId}`)
       .on(
@@ -132,14 +123,12 @@ export default function HostPage() {
                 item.word === word ? { ...item, count: item.count + 1 } : item,
               );
             }
-
             //lisätään uusi sana ensimmäistä kertaa
             return [
               ...current,
               {
                 word,
                 count: 1,
-                color: getRandomColor(),
               },
             ];
           });
@@ -156,7 +145,10 @@ export default function HostPage() {
     return <div>Loading...</div>;
   }
 
-  async function startGame() {
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+
+  // Session nimen vaihto
+  async function updateSessionName(name: string) {
     try {
       const response = await fetch('/api/session', {
         method: 'PATCH',
@@ -164,40 +156,70 @@ export default function HostPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          state: 'active',
+          name,
         }),
       });
 
       if (!response.ok) {
         throw new Error(
-          `Failed to start game: ${response.status} ${response.statusText}`,
+          `Failed to update session: ${response.status} ${response.statusText}`,
         );
       }
 
       const updatedSession = await response.json();
       setSessionData(updatedSession);
     } catch (error) {
-      console.error('startGame error: ', error);
+      console.error('updateSessionName error: ', error);
     }
   }
 
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+  //Submissioneiden poistaminen
+  async function resetSubmissions() {
+    try {
+      const response = await fetch('/api/submission', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete submissions: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      setSubmissionsData([]);
+      setShowResetConfirmation(false);
+    } catch (error) {
+      console.error('resetSubmissions error:', error);
+    }
+  }
 
   return (
-    <main className="relative h-dvh w-full overflow-hidden">
+    <main className="relative flex h-dvh w-full flex-col overflow-hidden px-20">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
-      {sessionData.state === 'paused' ? (
-        <HostLobbyView
-          sessionName={sessionData.name}
-          joinUrl={joinUrl}
-          onStart={startGame}
-        />
-      ) : (
-        <HostGameView
-          sessionName={sessionData.name}
-          submissions={submissionsData}
+      {showResetConfirmation && (
+        <ResetConfirmation
+          onCancel={() => setShowResetConfirmation(false)}
+          onReset={resetSubmissions}
         />
       )}
+      <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
+
+      {submissionsData.length === 0 ? (
+        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-6 pb-24">
+          <Image src="/images/cloud.svg" alt="" width={200} height={200} />
+          <h2 className="text-[3rem] font-bold text-white">No words yet</h2>
+        </section>
+      ) : (
+        <section className="relative z-10 min-h-0 flex-1">
+          <WordCloud submissions={submissionsData} />
+        </section>
+      )}
+      <HostGameFooter
+        sessionName={sessionName}
+        onSessionNameChange={setSessionName}
+        onSessionNameSave={updateSessionName}
+        onReset={() => setShowResetConfirmation(true)}
+      />
     </main>
   );
 }
