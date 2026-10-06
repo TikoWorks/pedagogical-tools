@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 
 type Status = 'input' | 'sending' | 'success';
@@ -11,8 +11,8 @@ export default function UserPage() {
   const [status, setStatus] = useState<Status>('input');
 
   // join_code haku URL:ista
-  const searchParams = useSearchParams();
-  const joinCode = searchParams.get('join_code');
+  const params = useParams();
+  const joinCode = params.join_code as string;
 
   // uuden käyttäjän lisäys & participantId:n haku
   useEffect(() => {
