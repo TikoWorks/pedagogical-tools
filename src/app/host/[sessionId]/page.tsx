@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import HostLobbyView from '@/components/host/HostLobbyView';
-import HostGameView from '@/components/host/HostGameView';
+import Image from 'next/image';
+import HostGameHeader from '@/components/host/HostGameHeader';
+import HostGameFooter from '@/components/host/HostGameFooter';
+import WordCloud from '@/components/host/WordCloud';
 import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
@@ -15,6 +17,7 @@ export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
+  const [sessionName, setSessionName] = useState('');
 
   // Session datan haku
   useEffect(() => {
@@ -32,6 +35,7 @@ export default function HostPage() {
 
         const data = await response.json();
         setSessionData(data);
+        setSessionName(data.name);
       } catch (error) {
         console.error('getSessionData error: ', error);
         throw error;
@@ -141,32 +145,6 @@ export default function HostPage() {
 
   const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
 
-  // Pelin aloittaminen
-  async function startGame() {
-    try {
-      const response = await fetch('/api/session', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          state: 'active',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to start game: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const updatedSession = await response.json();
-      setSessionData(updatedSession);
-    } catch (error) {
-      console.error('startGame error: ', error);
-    }
-  }
-
   // Session nimen vaihto
   async function updateSessionName(name: string) {
     try {
@@ -213,24 +191,27 @@ export default function HostPage() {
   }
 
   return (
-    <main className="relative h-dvh w-full overflow-hidden">
+    <main className="relative flex h-dvh w-full flex-col overflow-hidden px-20">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
-      {sessionData.state === 'paused' ? (
-        <HostLobbyView
-          sessionName={sessionData.name}
-          joinUrl={joinUrl}
-          onStart={startGame}
-          onSessionNameChange={updateSessionName}
-        />
+
+      <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
+
+      {submissionsData.length === 0 ? (
+        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-6 pb-24">
+          <Image src="/images/cloud.svg" alt="" width={200} height={200} />
+          <h2 className="text-[3rem] font-bold text-white">No words yet</h2>
+        </section>
       ) : (
-        <HostGameView
-          sessionName={sessionData.name}
-          joinUrl={joinUrl}
-          submissions={submissionsData}
-          onSessionNameChange={updateSessionName}
-          onReset={resetSubmissions}
-        />
+        <section className="relative z-10 min-h-0 flex-1">
+          <WordCloud submissions={submissionsData} />
+        </section>
       )}
+      <HostGameFooter
+        sessionName={sessionName}
+        onSessionNameChange={setSessionName}
+        onSessionNameSave={updateSessionName}
+        onReset={resetSubmissions}
+      />
     </main>
   );
 }
