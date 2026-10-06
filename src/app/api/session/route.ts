@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       name: body.name.trim(),
       join_code: joinCode,
       host_token: hostToken,
-      state: 'paused',
+      state: 'active',
     })
     .select('id, name, join_code, state')
     .single();
