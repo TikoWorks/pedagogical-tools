@@ -5,6 +5,7 @@ import Image from 'next/image';
 import HostGameHeader from '@/components/host/HostGameHeader';
 import HostGameFooter from '@/components/host/HostGameFooter';
 import WordCloud from '@/components/host/WordCloud';
+import ResetConfirmation from '@/components/host/ResetConfirmation';
 import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
@@ -18,6 +19,7 @@ export default function HostPage() {
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
   const [sessionName, setSessionName] = useState('');
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
   // Session datan haku
   useEffect(() => {
@@ -185,6 +187,7 @@ export default function HostPage() {
       }
 
       setSubmissionsData([]);
+      setShowResetConfirmation(false);
     } catch (error) {
       console.error('resetSubmissions error:', error);
     }
@@ -193,7 +196,12 @@ export default function HostPage() {
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden px-20">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
-
+      {showResetConfirmation && (
+        <ResetConfirmation
+          onCancel={() => setShowResetConfirmation(false)}
+          onReset={resetSubmissions}
+        />
+      )}
       <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
 
       {submissionsData.length === 0 ? (
@@ -210,7 +218,7 @@ export default function HostPage() {
         sessionName={sessionName}
         onSessionNameChange={setSessionName}
         onSessionNameSave={updateSessionName}
-        onReset={resetSubmissions}
+        onReset={() => setShowResetConfirmation(true)}
       />
     </main>
   );
