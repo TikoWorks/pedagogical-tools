@@ -16,7 +16,7 @@ export default function HostGameFooter({
   onSessionNameSave,
 }: HostGameFooterProps) {
   return (
-    <footer className="relative z-10 flex w-[50rem] items-center justify-between pb-12 gap-10">
+    <footer className="relative z-10 flex w-200 items-center justify-between pb-12 gap-10">
       <SessionNameInput
         sessionName={sessionName}
         onSessionNameChange={onSessionNameChange}
