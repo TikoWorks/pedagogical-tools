@@ -25,7 +25,7 @@ export default function UserPage() {
         const response = await fetch('/api/participant/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: joinCode }),
+          body: JSON.stringify({ joinCode }),
         });
         const data = await response.json();
         setParticipantID(data.id);
@@ -41,7 +41,6 @@ export default function UserPage() {
   // Sanan lisäys
   async function handleAdd(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-
     if (!inputWord.trim()) {
       console.error('inputWord missing');
       return;
@@ -54,7 +53,10 @@ export default function UserPage() {
       const response = await fetch('/api/submission/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: inputWord, participantId: participantId }),
+        body: JSON.stringify({
+          data: { word: inputWord },
+          participantId,
+        }),
       });
 
       if (!response.ok) {
