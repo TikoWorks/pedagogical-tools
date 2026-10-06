@@ -38,7 +38,7 @@ export default function Home() {
         />
         <button
           type="submit"
-          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#3CD4D0] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2">
+          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2">
           <svg
             width="20"
             height="20"
@@ -48,9 +48,9 @@ export default function Home() {
             <path
               d="M2 33V2L30 17.5L2 33Z"
               stroke="white"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
           Start

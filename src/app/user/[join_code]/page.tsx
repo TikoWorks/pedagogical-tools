@@ -77,11 +77,11 @@ export default function UserPage() {
   }
 
   return (
-    <main className="bg-[#0D004C] min-h-screen flex flex-1 w-full flex-col items-center">
+    <main className="bg-tumma min-h-screen flex flex-1 w-full flex-col items-center">
       {/* Käyttäjän input näkymä*/}
       {status === 'input' && (
         <div className="flex flex-1 w-full flex-col items-center">
-          <h1 className="text-[#E2066F] text-4xl font-semibold mt-12 mb-28">
+          <h1 className="text-magenta text-4xl font-semibold mt-12 mb-28">
             WordCloud
           </h1>
           <form onSubmit={handleAdd} className="flex flex-col gap-10">
@@ -114,7 +114,7 @@ export default function UserPage() {
             <button
               type="submit"
               disabled={!inputWord.trim()}
-              className="bg-[#E2066F] text-white font-semibold py-3 px-2 rounded-xl disabled:bg-gray-500">
+              className="bg-magenta text-white font-semibold py-3 px-2 rounded-xl disabled:bg-gray-500">
               Send
             </button>
           </form>
@@ -179,7 +179,7 @@ export default function UserPage() {
           </h1>
           <button
             onClick={() => setStatus('input')}
-            className="mt-auto mb-28 bg-[#E2066F] px-8 py-4 rounded-2xl w-3/4 text-white text-2xl font-bold">
+            className="mt-auto mb-28 bg-magenta px-8 py-4 rounded-2xl w-3/4 text-white text-2xl font-bold">
             Add new word
           </button>
         </div>
