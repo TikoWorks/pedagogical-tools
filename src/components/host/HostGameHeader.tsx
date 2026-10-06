@@ -14,9 +14,9 @@ export default function HostGameHeader({
     <div className="relative z-10 flex items-start justify-between px-20 pt-8">
       <HostHeader />
 
-      <section className="flex flex-col items-center justify-center text-white pt-20">
-        <h3 className="text-[2.25rem]">Topic</h3>
-        <h2 className="font-bold text-[6rem]">{sessionName}</h2>
+      <section className="bg-tumma flex h-40 w-100 flex-col items-center justify-center rounded-2xl text-white">
+        <h3 className="text-[2.25rem] leading-none">Topic</h3>
+        <h2 className="text-[6rem] leading-none font-bold">{sessionName}</h2>
       </section>
 
       <section className="flex items-start gap-14">
