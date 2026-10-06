@@ -38,7 +38,7 @@ export default function Home() {
         />
         <button
           type="submit"
-          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2">
+          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#AA0045] hover:cursor-pointer w-1/3 min-w-fit flex flex-row justify-center items-center gap-2">
           <svg
             width="20"
             height="20"
