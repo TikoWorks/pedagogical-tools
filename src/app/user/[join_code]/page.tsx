@@ -151,7 +151,7 @@ export default function UserPage() {
       {status === 'success' && (
         <div className="relative text-white flex flex-1 flex-col items-center h-full">
           <Image
-            src={'/confetti.png'}
+            src={'/images/confetti.png'}
             alt="confetti"
             width={500}
             height={500}
