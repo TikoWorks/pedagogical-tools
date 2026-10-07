@@ -20,7 +20,7 @@ export default function Home() {
     router.push(`/host/${data.id}`);
   };
   return (
-    <main className="flex flex-1 w-full h-full flex-col items-center bg-[#0D004C]">
+    <main className="flex flex-1 w-full h-full flex-col items-center bg-paavari">
       <h1 className="text-4xl font-bold my-8 text-magenta mb-16">WordCloud</h1>
       <div className="text-white flex flex-col items-center justify-center mb-8 gap-2">
         <h2 className="text-2xl font-bold">Create a session</h2>
@@ -28,7 +28,8 @@ export default function Home() {
       </div>
       <Form
         action={handleSessionStart}
-        className="flex flex-col gap-4 w-2/5 items-center">
+        className="flex flex-col gap-4 w-2/5 items-center"
+      >
         <input
           type="text"
           name="name"
@@ -38,13 +39,15 @@ export default function Home() {
         />
         <button
           type="submit"
-          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2">
+          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2"
+        >
           <svg
             width="20"
             height="20"
             viewBox="0 0 32 35"
             fill="none"
-            xmlns="http://www.w3.org/2000/svg">
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M2 33V2L30 17.5L2 33Z"
               stroke="white"
