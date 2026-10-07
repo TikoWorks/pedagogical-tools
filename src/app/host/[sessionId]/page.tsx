@@ -19,6 +19,7 @@ export default function HostPage() {
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
   const [sessionName, setSessionName] = useState('');
+  const [sessionNameDraft, setSessionNameDraft] = useState('');
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
   // Session datan haku
@@ -38,6 +39,7 @@ export default function HostPage() {
         const data = await response.json();
         setSessionData(data);
         setSessionName(data.name);
+        setSessionNameDraft(data.name);
       } catch (error) {
         console.error('getSessionData error: ', error);
         throw error;
@@ -168,6 +170,8 @@ export default function HostPage() {
 
       const updatedSession = await response.json();
       setSessionData(updatedSession);
+      setSessionName(updatedSession.name);
+      setSessionNameDraft(updatedSession.name);
     } catch (error) {
       console.error('updateSessionName error: ', error);
     }
@@ -194,8 +198,9 @@ export default function HostPage() {
   }
 
   return (
-    <main className="relative flex h-dvh w-full flex-col overflow-hidden px-20">
+    <main className="relative flex h-dvh w-full flex-col overflow-hidden">
       <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
+
       {showResetConfirmation && (
         <ResetConfirmation
           onCancel={() => setShowResetConfirmation(false)}
@@ -205,9 +210,17 @@ export default function HostPage() {
       <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
 
       {submissionsData.length === 0 ? (
-        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-6 pb-24">
-          <Image src="/images/cloud.svg" alt="" width={200} height={200} />
-          <h2 className="text-[3rem] font-bold text-white">No words yet</h2>
+        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:pb-24 2xl:gap-6">
+          <Image
+            className="h-40 w-40"
+            src="/images/cloud.svg"
+            alt=""
+            width={200}
+            height={200}
+          />
+          <h2 className="text-[2rem] font-bold text-white 2xl:text-[3rem]">
+            No words yet
+          </h2>
         </section>
       ) : (
         <section className="relative z-10 min-h-0 flex-1">
@@ -215,8 +228,8 @@ export default function HostPage() {
         </section>
       )}
       <HostGameFooter
-        sessionName={sessionName}
-        onSessionNameChange={setSessionName}
+        sessionName={sessionNameDraft}
+        onSessionNameChange={setSessionNameDraft}
         onSessionNameSave={updateSessionName}
         onReset={() => setShowResetConfirmation(true)}
       />
