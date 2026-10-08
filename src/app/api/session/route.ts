@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       name: body.name.trim(),
       join_code: joinCode,
       host_token: hostToken,
-      state: 'paused',
+      state: 'active',
     })
     .select('id, name, join_code, state')
     .single();
@@ -147,18 +147,6 @@ export async function PATCH(request: Request) {
     .eq('id', session.id)
     .select('id, name, join_code, state')
     .single();
-
-  // Poistetaan submissionit, jos nimi ei tyhjä
-  if (body.name !== undefined) {
-    const { error: deleteError } = await supabaseServer
-      .from('submission')
-      .delete()
-      .eq('session_id', session.id);
-
-    if (deleteError) {
-      return Response.json({ error: deleteError.message }, { status: 500 });
-    }
-  }
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });

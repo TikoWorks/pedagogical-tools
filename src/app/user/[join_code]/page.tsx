@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 
 type Status = 'input' | 'sending' | 'success';
@@ -11,8 +11,8 @@ export default function UserPage() {
   const [status, setStatus] = useState<Status>('input');
 
   // join_code haku URL:ista
-  const searchParams = useSearchParams();
-  const joinCode = searchParams.get('join_code');
+  const params = useParams();
+  const joinCode = params.join_code as string;
 
   // uuden käyttäjän lisäys & participantId:n haku
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function UserPage() {
         const response = await fetch('/api/participant/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: joinCode }),
+          body: JSON.stringify({ joinCode }),
         });
         const data = await response.json();
         setParticipantID(data.id);
@@ -41,7 +41,6 @@ export default function UserPage() {
   // Sanan lisäys
   async function handleAdd(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-
     if (!inputWord.trim()) {
       console.error('inputWord missing');
       return;
@@ -54,7 +53,10 @@ export default function UserPage() {
       const response = await fetch('/api/submission/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: inputWord, participantId: participantId }),
+        body: JSON.stringify({
+          data: { word: inputWord },
+          participantId,
+        }),
       });
 
       if (!response.ok) {
@@ -149,7 +151,7 @@ export default function UserPage() {
       {status === 'success' && (
         <div className="relative text-white flex flex-1 flex-col items-center h-full">
           <Image
-            src={'/confetti.png'}
+            src={'/images/confetti.png'}
             alt="confetti"
             width={500}
             height={500}
