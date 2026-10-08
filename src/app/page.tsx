@@ -32,13 +32,6 @@ export default function Home() {
       <Form
         action={handleSessionStart}
         className="flex flex-col gap-4 w-2/5 items-center">
-        <input
-          type="text"
-          name="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className=" py-2 px-4 mb-6 rounded-lg text-white bg-tumma/50 font-md text-center  w-full"
-        />
         <SessionNameInput sessionName={name} onSessionNameChange={setName} />
         <Button
           type="submit"
