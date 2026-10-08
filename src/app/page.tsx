@@ -23,7 +23,7 @@ export default function Home() {
     router.push(`/host/${data.id}`);
   };
   return (
-    <main className="flex flex-1 w-full h-full flex-col items-center bg-[#0D004C]">
+    <main className="flex flex-1 w-full h-full flex-col items-center bg-tumma">
       <h1 className="text-4xl font-bold my-8 text-magenta mb-16">WordCloud</h1>
       <div className="text-white flex flex-col items-center justify-center mb-8 gap-2">
         <h2 className="text-2xl font-bold">Create a session</h2>
@@ -36,7 +36,7 @@ export default function Home() {
         <Button
           type="submit"
           onClick={() => {}}
-          className="bg-magenta w-1/3 hover:bg-[#625BC4] hover:cursor-pointer">
+          className="bg-magenta min-w-40 w-2/3 hover:bg-[#625BC4] hover:cursor-pointer">
           <Image src="/images/start.svg" alt="start" width={20} height={20} />
           Start
         </Button>

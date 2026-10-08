@@ -12,7 +12,7 @@ export default function SessionNameInput({
   onSessionNameSave,
 }: SessionNameInputProps) {
   return (
-    <div className="relative w-full mb-6">
+    <div className="relative w-full">
       <input
         className="h-16 w-full rounded-2xl bg-tumma/50 border-3 border-white/30 px-12 text-center text-white text-[1.75rem]"
         type="text"
