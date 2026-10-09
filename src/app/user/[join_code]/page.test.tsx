@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import UserPage from './page';
 
-const mockUseSearchParams = vi.fn();
+const mockUseParams = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => mockUseSearchParams(),
+  useParams: () => mockUseParams(),
 }));
 
 vi.mock('next/image', () => ({
@@ -20,8 +20,8 @@ describe('UserPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseSearchParams.mockReturnValue({
-      get: (key: string) => (key === 'join_code' ? 'TEST123' : null),
+    mockUseParams.mockReturnValue({
+      join_code: 'TEST123',
     });
 
     global.fetch = vi.fn();
@@ -53,14 +53,14 @@ describe('UserPage', () => {
       expect(fetch).toHaveBeenCalledWith('/api/participant/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: 'TEST123' }),
+        body: JSON.stringify({ joinCode: 'TEST123' }),
       });
     });
   });
 
   it('does not add a participant when the join code is missing', () => {
-    mockUseSearchParams.mockReturnValue({
-      get: () => null,
+    mockUseParams.mockReturnValue({
+      join_code: undefined,
     });
 
     render(<UserPage />);
@@ -155,7 +155,7 @@ describe('UserPage', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          data: 'hello',
+          data: { word: 'hello' },
           participantId: 'participant-123',
         }),
       });
