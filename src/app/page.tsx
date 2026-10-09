@@ -23,7 +23,7 @@ export default function Home() {
     router.push(`/host/${data.id}`);
   };
   return (
-    <main className="flex flex-1 w-full h-full flex-col items-center bg-tumma">
+    <main className="flex flex-1 w-full h-full flex-col items-center bg-paavari">
       <h1 className="text-4xl font-bold my-8 text-magenta mb-16">WordCloud</h1>
       <div className="text-white flex flex-col items-center justify-center mb-8 gap-2">
         <h2 className="text-2xl font-bold">Create a session</h2>

@@ -16,7 +16,7 @@ export default function HostGameFooter({
   onSessionNameSave,
 }: HostGameFooterProps) {
   return (
-    <footer className="relative z-10 flex w-200 items-center justify-between pb-12 gap-10">
+    <footer className="relative z-10 flex w-150 items-center justify-between pb-12 gap-10 px-8 2xl:px-20 2xl:w-225">
       <SessionNameInput
         sessionName={sessionName}
         onSessionNameChange={onSessionNameChange}
@@ -24,7 +24,7 @@ export default function HostGameFooter({
       />
 
       <Button
-        className="w-70 border-3 border-[#F562A1] hover:bg-[#F562A1]"
+        className="w-70 border-3 border-[#F562A1] hover:bg-[#F562A1] 2xl:w-70"
         onClick={onReset}>
         <Image src="/images/reset.svg" alt="" width={25} height={25} />
         Reset
