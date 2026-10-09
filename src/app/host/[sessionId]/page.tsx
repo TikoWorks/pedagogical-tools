@@ -199,7 +199,7 @@ export default function HostPage() {
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
-      <div className="absolute -inset-[2px] bg-[url('/images/host_background.svg')] bg-[length:100%_100%] bg-no-repeat" />
+      <div className="absolute -inset-0.5 bg-[url('/images/host_background.svg')] bg-size-[100%_100%] bg-no-repeat" />
 
       {showResetConfirmation && (
         <ResetConfirmation

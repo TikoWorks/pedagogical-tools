@@ -4,7 +4,7 @@ import { useState } from 'react';
 type SessionNameInputProps = {
   sessionName: string;
   onSessionNameChange: (name: string) => void;
-  onSessionNameSave: (name: string) => Promise<void>;
+  onSessionNameSave?: (name: string) => Promise<void>;
 };
 
 export default function SessionNameInput({
@@ -21,7 +21,7 @@ export default function SessionNameInput({
     }
 
     setError('');
-    await onSessionNameSave(sessionName);
+    await onSessionNameSave?.(sessionName);
   }
 
   return (
