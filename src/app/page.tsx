@@ -39,6 +39,7 @@ export default function Home() {
         />
         <button
           type="submit"
+          data-testid="start-session"
           className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2"
         >
           <svg

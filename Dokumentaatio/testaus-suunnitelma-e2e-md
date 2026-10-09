@@ -1,0 +1,114 @@
+# Testaussuunnitelma ja testausdokumentaatio
+
+## Pedagogiset työkalut -verkkosovellus
+
+## 1. Sovelluksen kuvaus
+
+Pedagogiset työkalut on opettajille suunnattu verkkosovellus, jonka tavoitteena on tukea opetustilanteita ja opiskelijoiden osallistumista. Sovelluksen keskeinen toiminnallisuus on SanaPilvi, jossa opettaja luo session ja osallistujat lähettävät siihen sanoja omilta laitteiltaan.
+
+Sovelluksen ensimmäinen pilottiversio toteutettiin Claude AI:n avulla. Pilottiversiossa käytettiin SvelteKit-sovelluskehystä ja Supabase-palvelua. Uudessa versiossa sovellusta kehitetään uudelleen ja samalla sen arkkitehtuuria tarkennetaan.
+
+## 2. Käytettävät teknologiat
+
+Uuden version käyttöliittymä toteutetaan React- ja Next.js-teknologioilla. Tyylittelyssä käytetään Tailwind CSS -kirjastoa. Palvelinpuoli toteutetaan Next.js:n ja TypeScriptin avulla.
+
+Tietokantana ja reaaliaikaisuuden toteutuksessa käytetään Supabasea. Yksikkötestaukseen käytetään Vitestiä ja end-to-end-testaukseen Cypressiä.
+
+CI/CD-putki voidaan myöhemmin toteuttaa GitHub Actionsilla. CI/CD-automaatio ei kuulu tämän testausvaiheen ensimmäiseen rajaukseen.
+
+## 3. Testauksen tarkoitus
+
+End-to-end-testauksen tavoitteena on varmistaa, että sovellus toimii käyttäjän näkökulmasta yhtenä kokonaisuutena. Testissä jäljitellään käyttäjän etenemistä käyttöliittymässä ja tarkistetaan, että toiminto johtaa käyttäjän kannalta oikeaan lopputulokseen.
+
+SanaPilven keskeinen käyttäjäpolku on:
+
+> Opettaja luo session → osallistuja liittyy sessioon → osallistuja lähettää sanan → sana näkyy opettajan näkymässä.
+
+Testauksen tarkoituksena on varmistaa tämän käyttäjäpolun sekä siihen liittyvien MVP-toimintojen toiminta.
+
+## 4. MVP-rajaukset
+
+Ensimmäisen MVP-version tavoitteena on toteuttaa minimalistinen sanapilvi mahdollisimman pienellä mutta toimivalla toimintokokonaisuudella.
+
+MVP sisältää seuraavat toiminnot:
+
+- Isäntä voi luoda session.
+- Osallistuja voi liittyä sessioon QR-koodin kautta.
+- Osallistuja voi lähettää sanan sessioon.
+- Isäntä näkee osallistujien lähettämät sanat.
+- Isäntä voi resetoida sanapilven sanat.
+- Isäntä voi vaihtaa session nimeä.
+- Session tiedot pysyvät erillään muista sessioista.
+- Käyttäjä saa palautteen onnistuneesta tai epäonnistuneesta toiminnosta.
+
+QR-koodin fyysistä skannaamista puhelimen kameralla ei automatisoida Cypressillä. Cypressillä testataan, että QR-koodi tai siihen liittyvä osallistumislinkki muodostetaan oikein ja että linkki avaa oikean osallistujanäkymän. Fyysinen skannaus voidaan testata erikseen manuaalisena testinä.
+
+## 5. Testauksen rajaus
+
+Tässä vaiheessa testataan SanaPilven MVP-version keskeisiä toimintoja.
+
+Cypress-testit ajetaan paikallisessa testiympäristössä. Testeissä käytetään liittymislinkkiä tai QR-koodin sisältämää liittymislinkkiä. Puhelimen fyysisen kameran käyttö ei kuulu automaattiseen Cypress-testaukseen.
+
+Seuraavat aiheet rajataan tämän testausvaiheen ulkopuolelle:
+
+- kuormitustestaus
+- usean kymmenen samanaikaisen osallistujan testaaminen
+- spämmisuojaus ja bottien torjunta
+- session automaattinen vanheneminen
+- laaja selainyhteensopivuustestaus
+- automaattinen CI/CD-ajo
+- laajempi saavutettavuusarviointi
+- fyysisen QR-koodin skannaaminen kameralla
+
+## 6. Vaatimusmäärittely
+
+Tässä luvussa määritellään SanaPilven MVP-version toiminnalliset ja ei-toiminnalliset vaatimukset.
+
+Toiminnalliset vaatimukset kuvaavat järjestelmän tarjoamia toimintoja. Ei-toiminnalliset vaatimukset kuvaavat toiminnan laatua, kuten käytettävyyttä, responsiivisuutta ja saavutettavuutta.
+
+Jokaiselle vaatimukselle määritellään hyväksymiskriteeri, jonka perusteella vaatimuksen toteutuminen voidaan todentaa. Tunnus `TV` tarkoittaa toiminnallista vaatimusta ja `EV` ei-toiminnallista vaatimusta.
+
+### 6.1 Prioriteetit
+
+| Prioriteetti | Merkitys |
+|---|---|
+| P0 | Kriittinen vaatimus. Ilman sitä sovelluksen ydinkäyttäjäpolku ei toimi. |
+| P1 | Tärkeä vaatimus. Se parantaa käytettävyyttä tai luotettavuutta, mutta peruspolku voi teknisesti toimia ilman sitä. |
+| P2 | Jatkokehitykseen kuuluva vaatimus. Se ei kuulu tämän vaiheen MVP-hyväksymistestaukseen. |
+
+### 6.2 Toiminnalliset vaatimukset
+
+| ID | Vaatimus | Hyväksymiskriteeri / testattava tulos | Prioriteetti |
+|---|---|---|---|
+| TV-01 | Isäntä voi luoda uuden session. | Sessionäkymä avautuu ja sessiolle muodostuu yksilöllinen tunniste. | P0 |
+| TV-02 | Osallistuja voi liittyä sessioon QR-koodin tai liittymislinkin kautta. | QR-koodin tai linkin avaaminen ohjaa oikean session osallistujanäkymään. | P0 |
+| TV-03 | Osallistuja voi syöttää sanan tai lyhyen vastauksen. | Sanan syöttökenttä vastaanottaa hyväksyttävän syötteen. | P0 |
+| TV-04 | Osallistuja voi lähettää sanan sessioon. | Sana tallentuu ja käyttäjälle näytetään lähetyksen onnistuminen. | P0 |
+| TV-05 | Lähetetty sana näkyy isännän näkymässä. | Sana ilmestyy isännän sanapilveen ilman manuaalista sivun päivitystä. | P0 |
+| TV-06 | Tyhjää tai vain välilyöntejä sisältävää syötettä ei voi lähettää. | Lähetys estetään eikä tyhjää arvoa tallenneta sanapilveen. | P1 |
+| TV-07 | Isäntä voi resetoida sanapilven sanat. | Reset poistaa nykyiset sanat, mutta aktiivinen sessio säilyy. | P1 |
+| TV-08 | Isäntä voi vaihtaa session nimeä. | Uusi nimi näkyy isännän näkymässä ja session tunniste säilyy samana. | P1 |
+| TV-09 | Session nimen vaihtaminen ei poista sanapilven sanoja. | Aiemmin lähetetyt sanat säilyvät nimen vaihtamisen jälkeen. | P1 |
+| TV-10 | Järjestelmä antaa käyttäjälle palautteen toiminnon onnistumisesta tai epäonnistumisesta. | Käyttäjä näkee käyttöliittymässä ymmärrettävän onnistumis- tai virheilmoituksen. | P1 |
+| TV-11 | Eri sessioiden tiedot pysyvät erillään. | Yhteen sessioon lähetetty sana ei näy toisessa sessiossa. | P0 |
+
+### 6.3 Ei-toiminnalliset vaatimukset
+
+| ID | Vaatimus | Hyväksymiskriteeri / testattava tulos | Prioriteetti |
+|---|---|---|---|
+| EV-01 | Osallistuja pystyy käyttämään keskeisiä toimintoja mobiililaitteella. | Osallistuja voi liittyä sessioon, syöttää sanan ja lähettää sen mobiiliselaimella. | P0 |
+| EV-02 | Mobiilinäkymä on responsiivinen. | Käyttöliittymä toimii yleisillä puhelinnäytön leveyksillä ilman vaakasuuntaista vieritystä. | P1 |
+| EV-03 | Isännän näkymä on käyttötarkoitukseen nähden luettava suurelta näytöltä. | Sanapilven keskeinen sisältö on luettavissa luokkatilanteessa käytettävältä näytöltä tai projektorilta. | P1 |
+| EV-04 | Käyttöliittymän keskeiset toiminnot ovat ymmärrettäviä. | Käyttäjä tunnistaa liittymisen, sanan lähettämisen, Reset-toiminnon ja nimen vaihtamisen ilman merkittävää tulkinnanvaraa. | P1 |
+| EV-05 | Käyttöliittymä täyttää saavutettavuuden perustason. | Lomakekentillä on selkeät otsikot, isännän näkymä toimii näppäimistöllä ja merkitys ei välity ainoastaan värin avulla. | P1 |
+| EV-06 | Palvelu käsittelee käyttäjätietoja mahdollisimman vähäisesti. | Osallistujalta pyydetään vain toiminnan kannalta välttämättömät tiedot. | P1 |
+
+## 7. Testitapausten suunnitteluperiaatteet
+
+Testitapaukset suunnitellaan käyttäjän tavoitteen ja havaittavan hyväksymiskriteerin perusteella.
+
+Testin tavoitteena ei ole ainoastaan tarkistaa painikkeen tai yksittäisen teknisen toiminnon toiminta, vaan varmistaa käyttäjän kannalta merkityksellinen lopputulos.
+
+Testit pidetään mahdollisimman pieninä, mutta niiden tulee sulkea pois keskeiset harhaanjohtavan onnistumisen tilanteet. Epäonnistuneen testin yhteydessä arvioidaan, johtuuko havainto sovelluksesta, testidatasta, testiympäristöstä vai testin toteutuksesta.
+
+##
