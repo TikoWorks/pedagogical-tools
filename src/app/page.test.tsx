@@ -43,10 +43,12 @@ describe('Home', () => {
       screen.getByRole('heading', { name: 'WordCloud' }),
     ).toBeInTheDocument();
 
-    expect(screen.getByPlaceholderText('Subject')).toBeInTheDocument();
+    expect(
+      screen.getByText('Give your session a topic to get started'),
+    ).toBeInTheDocument();
 
     expect(
-      screen.getByRole('button', { name: 'Start session' }),
+      screen.getByRole('button', { name: 'startStart' }),
     ).toBeInTheDocument();
   });
 
@@ -60,7 +62,7 @@ describe('Home', () => {
     render(<Home />);
 
     const button = screen.getByRole('button', {
-      name: 'Start session',
+      name: 'startStart',
     });
 
     const consoleError = vi
@@ -92,9 +94,9 @@ describe('Home', () => {
 
     render(<Home />);
 
-    const input = screen.getByPlaceholderText('Subject');
+    const input = screen.getByRole('textbox');
     const button = screen.getByRole('button', {
-      name: 'Start session',
+      name: 'startStart',
     });
 
     await user.type(input, 'React Testing');

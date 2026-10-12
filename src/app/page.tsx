@@ -1,4 +1,7 @@
 'use client';
+import Button from '@/components/host/Button';
+import SessionNameInput from '@/components/host/SessionNameInput';
+import Image from 'next/image';
 import Form from 'next/form';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -28,36 +31,15 @@ export default function Home() {
       </div>
       <Form
         action={handleSessionStart}
-        className="flex flex-col gap-4 w-2/5 items-center"
-      >
-        <input
-          type="text"
-          name="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className=" py-2 px-4 mb-6 rounded-lg text-white bg-tumma/50 font-md text-center  w-full"
-        />
-        <button
+        className="flex flex-col gap-4 w-2/5 items-center">
+        <SessionNameInput sessionName={name} onSessionNameChange={setName} />
+        <Button
           type="submit"
-          className="py-2 px-4 font-semibold bg-magenta text-zinc-200 rounded-xl hover:bg-[#625BC4] hover:cursor-pointer w-1/3 flex flex-row justify-center items-center gap-2"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 32 35"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M2 33V2L30 17.5L2 33Z"
-              stroke="white"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          onClick={() => {}}
+          className="bg-magenta min-w-40 w-2/3 hover:bg-[#625BC4] hover:cursor-pointer">
+          <Image src="/images/start.svg" alt="start" width={20} height={20} />
           Start
-        </button>
+        </Button>
       </Form>
     </main>
   );

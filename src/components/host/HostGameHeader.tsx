@@ -30,7 +30,6 @@ export default function HostGameHeader({
           className="h-24 w-24 2xl:h-30 2xl:w-30"
           containerClassName="rounded-sm px-2 py-2 2xl:px-3"
         />
-
         <div className="whitespace-nowrap">
           <p className="text-[1.75rem] font-bold text-white 2xl:text-[2.25rem]">
             Add a word
