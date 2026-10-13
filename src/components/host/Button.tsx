@@ -16,8 +16,9 @@ export default function Button({
   return (
     <button
       type={type}
-      className={`flex h-16 items-center justify-center gap-4 rounded-2xl font-bold text-white text-[1.75rem] ${className}`}
-      onClick={onClick}>
+      className={`flex h-16 items-center justify-center gap-4 rounded-2xl font-bold text-white text-[1.75rem] ${className} cursor-pointer`}
+      onClick={onClick}
+    >
       {children}
     </button>
   );

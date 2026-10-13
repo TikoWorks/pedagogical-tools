@@ -24,8 +24,9 @@ export default function HostGameFooter({
       />
 
       <Button
-        className="w-70 border-3 border-[#F562A1] hover:bg-[#F562A1] 2xl:w-70"
-        onClick={onReset}>
+        className="w-70 border-3 border-[#F562A1] hover:bg-tumma 2xl:w-70"
+        onClick={onReset}
+      >
         <Image src="/images/reset.svg" alt="" width={25} height={25} />
         Reset
       </Button>
