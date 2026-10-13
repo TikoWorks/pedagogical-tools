@@ -13,7 +13,7 @@ describe('Sessionin luominen', () => {
         cy.visit('/');
 
         // Varmistetaan, että session nimen syöttökenttä on näkyvissä ja kirjoitetaan siihen session nimi
-        cy.get('input[name="name"]')
+        cy.get('[data-testid="session-name-input"]')
             .should('be.visible')
             .type(sessionName);
 

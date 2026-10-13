@@ -33,7 +33,8 @@ export default function SessionNameInput({
       )}
 
       <input
-        className="bg-tumma/50 h-12 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
+          data-testid="session-name-input"
+          className="bg-tumma/50 h-12 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
         type="text"
         value={sessionName}
         onChange={(event) => onSessionNameChange(event.target.value)}

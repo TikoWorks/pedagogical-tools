@@ -1,7 +1,7 @@
 describe('Host-näkymä', () => {
     beforeEach(() => {
         cy.visit('/');
-        cy.get('input[name="name"]').type('Cypress host test');
+        cy.get('[data-testid="session-name-input"]').type('Cypress host test');
         cy.get('[data-testid="start-session"]').click();
 
         cy.url().should('include', '/host/');
@@ -32,9 +32,9 @@ describe('Host-näkymä', () => {
 
     it('nimen vaihto tallentuu blurilla ja päivittyy otsikkoon', () => {
         cy.intercept('PATCH', '/api/session').as('rename');
-        cy.get('input[type="text"]').clear().type('Uusi nimi').blur();
+        cy.get('[data-testid="session-name-input"]').clear().type('Uusi nimi').blur();
         cy.wait('@rename').its('response.statusCode').should('eq', 200);
-        cy.contains('Uusi nimi').should('be.visible');
+        cy.get('h2').should('contain', 'Uusi nimi');
     });
 
     // Odottaa korjausta: Issue #XX (tyhjää nimeä ei validoida)
