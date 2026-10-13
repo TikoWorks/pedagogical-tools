@@ -135,7 +135,7 @@ Lisäperiaatteet:
 | Kohde | Arvo |
 |---|---|
 | Sovelluksen osoite | `http://localhost:3000` |
-| Tietokanta | Supabase (**[TARKISTA]** paikallinen vai pilvi-instanssi, ja onko se erillinen tuotannosta) |
+| Tietokanta | Supabase (paikallinen / pilvi-instanssi, ja onko se erillinen tuotannosta) |
 | Käynnistys | `npm run dev` (ensimmäinen terminaali) |
 | Cypress interaktiivisesti | `npm run cy:open` |
 | Cypress komentoriviltä | `npm run cy:run` |
