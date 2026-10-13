@@ -96,38 +96,73 @@ export default function WordCloud({ submissions }: WordCloudProps) {
 
     let cancelled = false;
     let layout: ReturnType<typeof cloud<CloudWord>> | undefined;
+    let cancelPendingLayout: (() => void) | undefined;
 
     async function createCloud() {
-      // Odotetaan, että selaimen fontit ovat latautuneet
+      // Odotetaan fonttien latautumista ennen sijoittelua
       await document.fonts.ready;
 
-      if (cancelled) {
-        return;
+      if (cancelled) return;
+
+      // Yritetään sijoittaa sanat annetulla fonttikoon kertoimella
+      function tryLayout(fontScale: number): Promise<CloudWord[] | null> {
+        return new Promise((resolve) => {
+          const scaledWords = cloudWords.map((word) => ({
+            ...word,
+            size: word.size * fontScale,
+          }));
+
+          // Keskeytetty laskenta palauttaa null-arvon
+          cancelPendingLayout = () => resolve(null);
+
+          layout = cloud<CloudWord>()
+            .size([size.width, size.height])
+            .words(scaledWords)
+            .padding(25)
+            .spiral('archimedean')
+            .rotate(() => 0)
+            .font('Poppins')
+            .fontSize((word) => word.size)
+            .fontWeight((word) => getFontWeight(word.count))
+            .on('end', (placedWords) => {
+              cancelPendingLayout = undefined;
+              resolve(placedWords);
+            });
+
+          layout.start();
+        });
       }
 
-      // d3-cloud laskee sanoille paikat ja estää päällekkäisyyksiä
-      layout = cloud<CloudWord>()
-        .size([size.width, size.height])
-        .words(cloudWords)
-        .padding(25)
-        .spiral('archimedean')
-        .rotate(() => 0)
-        .font('Poppins')
-        .fontSize((word) => word.size)
-        .fontWeight((word) => getFontWeight(word.count))
-        .on('end', (placedWords) => {
-          if (!cancelled) {
-            setWords(placedWords);
-          }
-        });
+      let bestWords: CloudWord[] = [];
 
-      layout.start();
+      // Pienennetään fontteja, kunnes kaikki sanat mahtuvat
+      for (const fontScale of [1, 0.9, 0.8, 0.7, 0.6, 0.5]) {
+        if (cancelled) return;
+
+        const placedWords = await tryLayout(fontScale);
+
+        if (cancelled || placedWords === null) return;
+
+        // Tallennetaan paras tulos siltä varalta, ettei kaikkia saada sijoitettua
+        if (placedWords.length > bestWords.length) {
+          bestWords = placedWords;
+        }
+
+        if (placedWords.length === cloudWords.length) {
+          setWords(placedWords);
+          return;
+        }
+      }
+
+      // Näytetään paras tulos, vaikka kaikki sanat eivät mahtuisi
+      setWords(bestWords);
     }
     createCloud();
 
     return () => {
       cancelled = true;
       layout?.stop();
+      cancelPendingLayout?.();
     };
   }, [submissions, size]);
   return (
@@ -146,6 +181,7 @@ export default function WordCloud({ submissions }: WordCloudProps) {
                   fontSize: word.size,
                   fontWeight: getFontWeight(word.count),
                   fill: word.color,
+                  transition: 'transform 600ms ease, font-size 600ms ease',
                 }}
               >
                 {word.text}
