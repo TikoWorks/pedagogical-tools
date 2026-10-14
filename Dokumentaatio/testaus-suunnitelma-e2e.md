@@ -1,15 +1,17 @@
+***
+
 # Testaussuunnitelma ja testausdokumentaatio
 
 ## Pedagogiset työkalut -verkkosovellus
 
 | Tieto | Arvo |
 |---|---|
-| Dokumentin versio | 1.0 |
-| Päivitetty | 13.10.2026 |
+| Dokumentin versio | 1.1 |
+| Päivitetty | 14.10.2026 |
 | Haara | `testing/tommi` (mergattu `origin/main`, 13.10.2026) |
 | Tila | Luonnos, tulokset täytetään testiajojen jälkeen |
 
----
+***
 
 ## 1. Sovelluksen kuvaus
 
@@ -65,7 +67,7 @@ MVP sisältää seuraavat toiminnot:
 
 Session tilan vaihtaminen (`active` / `paused`) on tuettu API:ssa. **[TARKISTA]** Onko isännän näkymässä pause-painike. Jos ei ole, toiminto kuuluu jatkokehitykseen, ja sille on vain API-tason testaus.
 
-QR-koodin fyysistä skannausta kameralla ei automatisoida. Cypressillä testataan, että QR-koodi tai osallistumislinkki muodostetaan oikein ja että linkki avaa oikean osallistujanäkymän. Fyysinen skannaus testataan manuaalisesti (luku 9).
+QR-koodin fyysistä skannausta kameralla ei automatisoida. Cypressillä testataan, että QR-koodi tai osallistumislinkki muodostetaan oikein ja että linkki avaa oikean osallistujanäkymän. Fyysinen skannaus testataan manuaalisesti (luku 11).
 
 ## 5. Testauksen rajaus
 
@@ -135,7 +137,7 @@ Lisäperiaatteet:
 | Kohde | Arvo |
 |---|---|
 | Sovelluksen osoite | `http://localhost:3000` |
-| Tietokanta | Supabase (paikallinen / pilvi-instanssi, ja onko se erillinen tuotannosta) |
+| Tietokanta | Supabase. **[TARKISTA]** Onko instanssi paikallinen vai pilvessä, ja onko se erillinen tuotannosta. |
 | Käynnistys | `npm run dev` (ensimmäinen terminaali) |
 | Cypress interaktiivisesti | `npm run cy:open` |
 | Cypress komentoriviltä | `npm run cy:run` |
@@ -143,7 +145,7 @@ Lisäperiaatteet:
 | Lint | `npm run lint` |
 | Tuotantokäännös | `npm run build` |
 
-Ennen ajoa tarkistetaan, että `.env`-tiedostossa on Supabase-avaimet ja että kehityspalvelin on käynnissä. Cypress ei käynnistä sovellusta itse.
+Ennen ajoa tarkistetaan, että `.env`-tiedostossa (tai `.env.local`) on Supabase-avaimet ja että kehityspalvelin on käynnissä. Cypress ei käynnistä sovellusta itse.
 
 ## 9. Testitasot ja nykytila
 
@@ -170,7 +172,7 @@ Tilanne 13.10.2026 mergen `origin/main`-haaran jälkeen: 5 tiedostoa ja 22 testi
 | `host.cy.ts` | Nimen vaihto tallentuu blurilla ja päivittyy otsikkoon | TV-08 | Toteutettu |
 | `host.cy.ts` | Tyhjä nimi näyttää virheen eikä lähetä PATCH-kutsua | TV-08, TV-10 | **Ohitettu (`it.skip`)** |
 
-Ohitetun testin kommentissa viitataan paikkamerkkiin `Issue #56`. Linkki oikeaan issueen puuttuu, ja testin valitsin `input[type="text"]` on epävarma. Muut testit käyttävät `data-testid`-valitsinta.
+Ohitetun testin kommentti viittaa paikkamerkkiin `Issue #XX`. Oikea issue on #77, joten paikkamerkki korvataan sillä. Testin valitsin `input[type="text"]` on lisäksi epävarma. Muut testit käyttävät `data-testid`-valitsinta, ja ohitetunkin testin pitäisi käyttää samaa `session-name-input`-valitsinta.
 
 ### 9.3 Uusittavat Cypress-testit
 
@@ -188,11 +190,11 @@ Nämä testit puuttuvat ja ne kirjoitetaan seuraavaksi. Ydinpolun testi (CY-01) 
 | CY-08 | Nimen vaihdon jälkeen aiemmin lähetetyt sanat säilyvät | TV-09 | P1 | Suunniteltu |
 | CY-09 | Epäonnistunut lähetys (`cy.intercept` palauttaa 500) näyttää virheilmoituksen ja palauttaa syöttönäkymään | TV-10 | P1 | Suunniteltu |
 | CY-10 | Osallistujanäkymä mobiilileveydellä (`cy.viewport` 375×667): ei vaakavieritystä, liittyminen ja lähetys onnistuvat | EV-01, EV-02 | P0/P1 | Suunniteltu |
-| CY-11 | Tyhjän session nimen validointi (nykyisen ohitetun testin korjaus) | TV-08, TV-10 | P1 | Odottaa UI-korjausta |
+| CY-11 | Tyhjän session nimen validointi (nykyisen ohitetun testin korjaus, issue #77) | TV-08, TV-10 | P1 | Odottaa UI-korjausta |
 
 Huomioita toteutukseen:
 
-- CY-01 ja CY-06 vaativat kaksi roolia. Isäntä ja osallistuja ovat eri evästekonteksteja. Osallistujan toiminta tehdään joko `cy.origin`/`cy.session`-tekniikalla tai `cy.request`-kutsuilla (`POST /api/participant`, `POST /api/submission`) ja isännän tulos tarkistetaan käyttöliittymästä. Tämä on testisuunnittelun avoin ratkaisu.
+- CY-01 ja CY-06 vaativat kaksi roolia. Isäntä ja osallistuja ovat eri evästekonteksteja. Osallistujan toiminta tehdään joko `cy.origin`/`cy.session`-tekniikalla tai `cy.request`-kutsuilla (`POST /api/participant`, `POST /api/submission`), ja isännän tulos tarkistetaan käyttöliittymästä. Tämä on testisuunnittelun avoin ratkaisu.
 - TV-05:n vaatimus "ilman manuaalista päivitystä" tarkoittaa, ettei testi saa kutsua `cy.reload()`. Realtime-päivitys todennetaan odottamalla sanaa isännän näkymässä.
 - Testien tulee siivota luomansa sessiot (esimerkiksi `DELETE /api/session` testin lopuksi), jotta tietokantaan ei kerry testidataa.
 
@@ -232,10 +234,10 @@ Täytetään jokaisen ajon jälkeen.
 
 | Ajo | Päivä | Työkalu | Läpi | Hylätty | Ohitettu | Huomio |
 |---|---|---|---|---|---|---|
-| 1 | 13.10.2026 | Vitest | 22 | 0 | 0 | Merge-haaran jälkeen |
-| 2 | | Cypress | | | 1 (tunnettu) | |
-| 3 | | Lint | – | 0 virhettä | – | 4 varoitusta |
-| 4 | | Build | | | | Aja `npm run build` |
+| 1 | 13.10.2026 | Vitest (`test:run`) | 22 | 0 | 0 | Merge-haaran jälkeen |
+| 2 | 13.10.2026 | Lint (`lint`) | – | 0 virhettä | – | 4 varoitusta (H-06) |
+| 3 | 14.10.2026 | Cypress (`cy:run`) | 5 | 0 | 1 (H-02, tunnettu) | `host.cy.ts` 4/5, `session.cy.ts` 1/1. Electron-kaatumista ei toistunut (H-13). |
+| 4 | 14.10.2026 | Build (`build`) | Läpi | 0 | – | `.env.local` oli käytössä. 7/7 sivua generoitu. |
 
 ## 13. Havainnot
 
@@ -244,20 +246,27 @@ Täytetään jokaisen ajon jälkeen.
 | ID | Havainto | Vakavuus | Vaikutus | Tila / toimenpide |
 |---|---|---|---|---|
 | H-01 | Ydinpolulle ei ole E2E-testiä (TV-02, TV-04, TV-05, TV-11). | Korkea | P0-vaatimukset todennettu vain yksikkötasolla. | Kirjoitetaan CY-01, CY-02, CY-06 |
-| H-02 | Tyhjän session nimen validointi puuttuu käyttöliittymästä. API hylkää tyhjän nimen (400), mutta UI ei näytä virheilmoitusta. | Keskitaso | Käyttäjä ei saa palautetta (TV-10). | Testi ohitettu. Luo oikea issue ja korvaa `Issue #56` |
+| H-02 | Isännän näkymä ei näytä virhettä, kun session nimi tyhjennetään. Testi on ohitettu (`it.skip`). Testin kommentissa on paikkamerkki `Issue #XX`. Aiempi viittaus #56 oli väärä, koska se koskee Cypressin smoke-testin kokeilua. Oikea issue on #77 "Isännän näkymä ei näytä virhettä, kun session nimi tyhjennetään". | Keskitaso | Käyttäjä ei saa palautetta (TV-10). Luokka: sovellusvirhe. | Issue #77 on olemassa. Korvaa kommentin `#XX` luvulla `#77` ja päätä, pidetäänkö #77 GitHub Projectissa. Testi aktivoidaan (CY-11), kun UI on korjattu. |
 | H-03 | `participant`-API:n POST-käsittelijä tulostaa konsoliin koko pyynnön rungon (`console.log(body)`). | Matala | Debug-tuloste jäänyt tuotantokoodiin. | Poistettava ennen julkaisua |
-| H-04 | Testikoodissa `act(...)`-varoituksia (`UserPage`). | Matala | Ei vaikuta toimintaan, mutta kertoo, että tilapäivitykset eivät ole testissä odotettuja. | Kääri `act`/`waitFor`-rakenteisiin |
+| H-04 | Testikoodissa `act(...)`-varoituksia (`UserPage`). | Matala | Ei vaikuta toimintaan, mutta tilapäivityksiä ei ole odotettu testissä. | Kääri `act`/`waitFor`-rakenteisiin |
 | H-05 | Testissä `Invalid DOM property stroke-linecap` / `stroke-linejoin`. | Matala | SVG-attribuutit väärin muodossa (pitää olla `strokeLinecap`, `strokeLinejoin`). | Korjataan, jos virhe on sovelluskoodissa **[TARKISTA]**, ei vain mockissa |
 | H-06 | Lint-varoitukset: `<img>` ilman `alt`-attribuuttia testitiedostossa (`page.test.tsx`) ja käyttämättömät `on`, `config` tiedostossa `cypress.config.ts`. | Matala | Ei toiminnallista vaikutusta. | Siivotaan |
-| H-07 | Vite-asetus: `vitest.config.ts` käyttää ESM-syntaksia CommonJS-tiedostona. | Matala | Varoitus, tuleva Vite-versio voi vaatia muutosta. | Nimeä `vitest.config.mts` tai lisää `"type": "module"` |
+| H-07 | `vitest.config.ts` käyttää ESM-syntaksia CommonJS-tiedostona. | Matala | Varoitus. Tuleva Vite-versio voi vaatia muutosta. | Nimeä `vitest.config.mts` tai lisää `"type": "module"` |
 | H-08 | Isännän oikeus perustuu evästeeseen, ei URL:n `sessionId`:hen. Uusi session luonti samassa selaimessa korvaa vanhan `host_token`-evästeen. | Keskitaso | Isäntä voi menettää hallinnan vanhaan sessioon, jos luo uuden samassa selaimessa. **[TARKISTA]** | Testataan CY-06:n yhteydessä, päätetään tarvitaanko varoitus |
 | H-09 | Liittymiskoodi arvotaan `Math.random()`-funktiolla, ja törmäyksen käsittely on epäselvä. **[TARKISTA]** onko `join_code` uniikki tietokannassa. | Matala | Harvinainen törmäys voisi yhdistää eri sessiot. | Tarkista tietokannan UNIQUE-rajoite |
 | H-10 | Cypress ajaa oikeaa Supabasea vasten, eikä testidatan siivous ole varmistettu. | Keskitaso | Tietokantaan kertyy testisessioita. | Lisää siivous testien `after`-koukkuun |
 | H-11 | `cypress.config.ts` sisältää `projectId`-arvon. | Matala | Cypress Cloud -tunniste versionhallinnassa. | Tarkista, onko tarkoituksellinen |
+| H-13 | Cypress-käyttöliittymän (`cy:open`) Electron-välilehti kaatui kerran `host.cy.ts`-ajossa. Headless-ajo (`cy:run`) meni läpi 14.10.2026. | Matala | Epävakaus testiympäristössä, ei sovelluksessa. Luokka: testiympäristö. | Ei toistunut headless-ajossa 14.10.2026. Seurataan. Jos toistuu, vakavuus nostetaan. |
 
 ### 13.2 Havaintojen luokittelu
 
-Epäonnistuneen testin syy luokitellaan yhteen luokkaan: sovellusvirhe, testidata, testiympäristö tai testin toteutus. Ohitettu H-02 on sovellusvirhe. H-04 on testin toteutukseen liittyvä havainto.
+Epäonnistuneen testin syy luokitellaan yhteen luokkaan: sovellusvirhe, testidata, testiympäristö tai testin toteutus.
+
+| Havainto | Luokka |
+|---|---|
+| H-02 | Sovellusvirhe |
+| H-04, H-06 | Testin toteutus |
+| H-13 | Testiympäristö |
 
 ## 14. Tunnetut rajoitteet
 
@@ -275,7 +284,7 @@ Testausvaihe on valmis, kun:
 2. CY-01 (ydinpolku) menee läpi kolme kertaa peräkkäin ilman uudelleenyritystä.
 3. Yksikkötestit, lint ja build menevät läpi ilman virheitä.
 4. Kaikilla ohitetuilla testeillä on oikea issue-linkki.
-5. Havainnot H-01–H-11 on käsitelty, siirretty issueiksi tai perusteltu tunnetuksi rajoitteeksi.
+5. Havainnot H-01–H-13 on käsitelty, siirretty issueiksi tai perusteltu tunnetuksi rajoitteeksi.
 6. Manuaaliset testit MT-01–MT-07 on ajettu ja tulokset kirjattu.
 
 ## 16. Työjärjestys ja seuraavat askeleet
@@ -286,11 +295,13 @@ Testausvaihe on valmis, kun:
 | 2 | `.idea/` lisätty `.gitignore`-tiedostoon | Valmis |
 | 3 | Cypressin screenshotit ja videot ohitettu versionhallinnassa | Valmis |
 | 4 | Haara pushattu `origin/testing/tommi` | Valmis |
-| 5 | `npm run build` ajettu läpi (H-12 jos virheitä) | Avoin |
-| 6 | Aja nykyiset Cypress-testit ja kirjaa ajo 2 lukuun 12 | Avoin |
-| 7 | Luo GitHub-issue H-02:sta ja korvaa `Issue #56` testissä | Avoin |
+| 5 | `npm run build` ajettu läpi | Valmis 14.10.2026 |
+| 6 | Nykyiset Cypress-testit ajettu ja ajo kirjattu lukuun 12 | Valmis 14.10.2026 |
+| 7 | Korvaa `Issue #XX` luvulla `Issue #77` testin kommentissa (`host.cy.ts`) ja päätä, pidetäänkö #77 Projectissa | Avoin |
 | 8 | Kirjoita CY-01, CY-02, CY-06 (P0) ja aja CY-01 kolme kertaa peräkkäin | Avoin |
 | 9 | Kirjoita CY-03–CY-05, CY-07–CY-10 (P1) | Avoin |
-| 10 | Siirrä havainnot H-01–H-11 issueiksi ja poista omat issuet GitHub Projectista | Avoin |
+| 10 | Siirrä havainnot H-01, H-03–H-11 ja H-13 (jos toistuu) issueiksi ja poista omat issuet GitHub Projectista | Avoin |
 | 11 | Aja manuaaliset testit MT-01–MT-07 | Avoin |
 | 12 | Päivitä luvut 9, 10, 12 ja 13 lopullisilla tuloksilla, nosta versio 2.0 | Avoin |
+
+***
