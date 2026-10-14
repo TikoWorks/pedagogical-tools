@@ -277,3 +277,20 @@ Testausvaihe on valmis, kun:
 4. Kaikilla ohitetuilla testeillä on oikea issue-linkki.
 5. Havainnot H-01–H-11 on käsitelty, siirretty issueiksi tai perusteltu tunnetuksi rajoitteeksi.
 6. Manuaaliset testit MT-01–MT-07 on ajettu ja tulokset kirjattu.
+
+## 16. Työjärjestys ja seuraavat askeleet
+
+| # | Tehtävä | Tila |
+|---|---|---|
+| 1 | Merge `origin/main`, yksikkötestit ja lint | Valmis 13.10.2026 |
+| 2 | `.idea/` lisätty `.gitignore`-tiedostoon | Valmis |
+| 3 | Cypressin screenshotit ja videot ohitettu versionhallinnassa | Valmis |
+| 4 | Haara pushattu `origin/testing/tommi` | Valmis |
+| 5 | `npm run build` ajettu läpi (H-12 jos virheitä) | Avoin |
+| 6 | Aja nykyiset Cypress-testit ja kirjaa ajo 2 lukuun 12 | Avoin |
+| 7 | Luo GitHub-issue H-02:sta ja korvaa `Issue #56` testissä | Avoin |
+| 8 | Kirjoita CY-01, CY-02, CY-06 (P0) ja aja CY-01 kolme kertaa peräkkäin | Avoin |
+| 9 | Kirjoita CY-03–CY-05, CY-07–CY-10 (P1) | Avoin |
+| 10 | Siirrä havainnot H-01–H-11 issueiksi ja poista omat issuet GitHub Projectista | Avoin |
+| 11 | Aja manuaaliset testit MT-01–MT-07 | Avoin |
+| 12 | Päivitä luvut 9, 10, 12 ja 13 lopullisilla tuloksilla, nosta versio 2.0 | Avoin |
