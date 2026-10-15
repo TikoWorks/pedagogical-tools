@@ -27,13 +27,13 @@ export default function SessionNameInput({
   return (
     <div className="relative w-full">
       {error && (
-        <p className="text-magenta absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap 2xl:text-[1.5rem]">
+        <p className="text-magenta absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-[1.5rem]">
           {error}
         </p>
       )}
 
       <input
-        className="bg-tumma/50 h-12 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
+        className="bg-tumma/50 h-13 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
         type="text"
         value={sessionName}
         onChange={(event) => onSessionNameChange(event.target.value)}

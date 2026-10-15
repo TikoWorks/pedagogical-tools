@@ -50,12 +50,20 @@ export default function Home() {
 
         <Form
           action={handleSessionStart}
-          className="flex flex-col w-160 items-center gap-20 pt-20"
+          className="flex flex-col w-130 items-center pt-15 gap-12 2xl:w-160 2xl:pt-20 2xl:gap-20"
         >
           <SessionNameInput sessionName={name} onSessionNameChange={setName} />
-
-          <Button type="submit" className="w-75 bg-magenta hover:bg-[#AA0045]">
-            <Image src="/images/start.svg" alt="" width={20} height={22} />
+          <Button
+            type="submit"
+            className="w-50 bg-magenta hover:bg-[#AA0045] 2xl:w-75"
+          >
+            <Image
+              src="/images/start.svg"
+              alt=""
+              width={20}
+              height={22}
+              className="h-auto w-4 2xl:w-5"
+            />
             Start
           </Button>
         </Form>

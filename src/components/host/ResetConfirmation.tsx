@@ -29,14 +29,14 @@ export default function ResetConfirmation({
 
         <div className="flex gap-8 pt-6 2xl:gap-20 2xl:pt-10">
           <Button
-            className="bg-paavari w-40 border-2 border-white hover:bg-tumma 2xl:w-50"
+            className="bg-paavari w-35 border-2 border-white hover:bg-tumma 2xl:w-50"
             onClick={onCancel}
           >
             Cancel
           </Button>
 
           <Button
-            className="bg-magenta w-40 hover:bg-[#AA0045] 2xl:w-50"
+            className="bg-magenta w-35 hover:bg-[#AA0045] 2xl:w-50"
             onClick={onReset}
           >
             Reset
