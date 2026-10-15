@@ -2,7 +2,6 @@
 import Button from '@/components/host/Button';
 import SessionNameInput from '@/components/host/SessionNameInput';
 import Image from 'next/image';
-import Form from 'next/form';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import HostHeader from '@/components/host/HostHeader';
@@ -10,10 +9,15 @@ import HostHeader from '@/components/host/HostHeader';
 export default function Home() {
   const [name, setName] = useState('');
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
+
   const handleSessionStart = async () => {
     if (!name.trim()) {
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const response = await fetch('/api/session', {
@@ -26,10 +30,12 @@ export default function Home() {
         throw new Error('Failed to create session');
       }
 
-      const data = await response.json();
-      router.push(`/host/${data.id}`);
+      const session = await response.json();
+      router.push(`/host/${session.id}`);
     } catch (error) {
       console.error('Failed to create session:', error);
+      setCreateError('Could not create session. Please try again.');
+      setIsLoading(false);
     }
   };
   return (
@@ -48,25 +54,55 @@ export default function Home() {
           </p>
         </div>
 
-        <Form
-          action={handleSessionStart}
-          className="flex flex-col w-130 items-center pt-15 gap-12 2xl:w-160 2xl:pt-20 2xl:gap-20"
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSessionStart();
+          }}
+          className="flex w-130 flex-col items-center gap-12 pt-15 2xl:w-160 2xl:gap-20 2xl:pt-20"
         >
-          <SessionNameInput sessionName={name} onSessionNameChange={setName} />
+          <div className="relative w-full">
+            <SessionNameInput
+              sessionName={name}
+              onSessionNameChange={setName}
+            />
+            {createError && (
+              <p
+                role="alert"
+                className="absolute top-full mt-2 w-full text-center text-magenta text-[1.5rem]"
+              >
+                {createError}
+              </p>
+            )}
+          </div>
+
           <Button
             type="submit"
-            className="w-50 bg-magenta hover:bg-[#AA0045] 2xl:w-75"
+            className={`
+            w-50 bg-magenta enabled:hover:bg-[#AA0045]
+            2xl:w-75
+            ${isLoading ? 'disabled:cursor-wait' : 'disabled:bg-[#D4B4C4] disabled:cursor-not-allowed'}`}
+            disabled={!name.trim() || isLoading}
           >
-            <Image
-              src="/images/start.svg"
-              alt=""
-              width={20}
-              height={22}
-              className="h-auto w-4 2xl:w-5"
-            />
-            Start
+            {isLoading ? (
+              <>
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent " />
+                Starting...
+              </>
+            ) : (
+              <>
+                <Image
+                  src="/images/start.svg"
+                  alt=""
+                  width={20}
+                  height={22}
+                  className="h-auto w-4 2xl:w-5"
+                />
+                Start
+              </>
+            )}
           </Button>
-        </Form>
+        </form>
       </div>
     </main>
   );
