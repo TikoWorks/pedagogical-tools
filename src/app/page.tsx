@@ -34,7 +34,7 @@ export default function Home() {
       router.push(`/host/${session.id}`);
     } catch (error) {
       console.error('Failed to create session:', error);
-      setCreateError('Could not create session. Please try again.');
+      setCreateError('Could not start a game. Please try again.');
       setIsLoading(false);
     }
   };
