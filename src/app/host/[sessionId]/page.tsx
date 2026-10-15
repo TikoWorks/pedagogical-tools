@@ -31,6 +31,8 @@ export default function HostPage() {
   // Session name päivitys
   const [sessionName, setSessionName] = useState('');
   const [sessionNameDraft, setSessionNameDraft] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [saveNameError, setSaveNameError] = useState('');
 
   // Reset
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
@@ -191,6 +193,11 @@ export default function HostPage() {
 
   // Session nimen vaihto
   async function updateSessionName(name: string) {
+    if (isSavingName) return;
+
+    setIsSavingName(true);
+    setSaveNameError('');
+
     try {
       const response = await fetch('/api/session', {
         method: 'PATCH',
@@ -213,7 +220,10 @@ export default function HostPage() {
       setSessionName(updatedSession.name);
       setSessionNameDraft(updatedSession.name);
     } catch (error) {
-      console.error('updateSessionName error: ', error);
+      console.error('updateSessionName error:', error);
+      setSaveNameError('Could not save session name. Please try again.');
+    } finally {
+      setIsSavingName(false);
     }
   }
 
@@ -292,8 +302,13 @@ export default function HostPage() {
       )}
       <HostGameFooter
         sessionName={sessionNameDraft}
-        onSessionNameChange={setSessionNameDraft}
+        onSessionNameChange={(name) => {
+          setSessionNameDraft(name);
+          setSaveNameError('');
+        }}
         onSessionNameSave={updateSessionName}
+        isSavingName={isSavingName}
+        saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
       />
     </main>
