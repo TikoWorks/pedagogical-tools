@@ -118,17 +118,16 @@ export default function WordCloud({ submissions }: WordCloudProps) {
           layout = cloud<CloudWord>()
             .size([size.width, size.height])
             .words(scaledWords)
-            .padding(25)
+            .padding(10)
             .spiral('archimedean')
             .rotate(() => 0)
             .font('Poppins')
             .fontSize((word) => word.size)
             .fontWeight((word) => getFontWeight(word.count))
             .on('end', (placedWords) => {
-              cancelPendingLayout = undefined;
+              console.log('Cloud placed:', placedWords);
               resolve(placedWords);
             });
-
           layout.start();
         });
       }
