@@ -158,7 +158,7 @@ export default function HostPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
         }),
       });
 

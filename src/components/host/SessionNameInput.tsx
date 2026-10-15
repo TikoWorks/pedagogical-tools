@@ -16,7 +16,7 @@ export default function SessionNameInput({
 
   async function handleBlur() {
     if (!sessionName.trim()) {
-      setError('Session name is required');
+      setError('Subject is required');
       return;
     }
 
@@ -27,7 +27,7 @@ export default function SessionNameInput({
   return (
     <div className="relative w-full">
       {error && (
-        <p className="text-magenta absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-[1rem] 2xl:text-[1.5rem]">
+        <p className="text-magenta absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap 2xl:text-[1.5rem]">
           {error}
         </p>
       )}
@@ -38,6 +38,7 @@ export default function SessionNameInput({
         value={sessionName}
         onChange={(event) => onSessionNameChange(event.target.value)}
         onBlur={handleBlur}
+        required
       />
 
       <Image
@@ -46,6 +47,7 @@ export default function SessionNameInput({
         alt=""
         width={25}
         height={25}
+        loading="eager"
       />
     </div>
   );
