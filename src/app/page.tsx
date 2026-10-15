@@ -1,10 +1,12 @@
 'use client';
-import Button from '@/components/host/Button';
-import SessionNameInput from '@/components/host/SessionNameInput';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Button from '@/components/ui/Button';
+import SessionNameInput from '@/components/host/SessionNameInput';
 import HostHeader from '@/components/host/HostHeader';
+import LoadingMessage from '@/components/ui/LoadingMessage';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -67,12 +69,10 @@ export default function Home() {
               onSessionNameChange={setName}
             />
             {createError && (
-              <p
-                role="alert"
-                className="absolute top-full mt-2 w-full text-center text-magenta text-[1.5rem]"
-              >
-                {createError}
-              </p>
+              <ErrorMessage
+                message={createError}
+                className="absolute top-full mt-2 w-full text-[1.5rem]"
+              />
             )}
           </div>
 
@@ -85,10 +85,10 @@ export default function Home() {
             disabled={!name.trim() || isLoading}
           >
             {isLoading ? (
-              <>
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent " />
-                Starting...
-              </>
+              <LoadingMessage
+                message="Starting..."
+                className="text-[1.25rem] 2xl:text-[1.75rem]"
+              />
             ) : (
               <>
                 <Image

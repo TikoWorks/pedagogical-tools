@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import SessionNameInput from './SessionNameInput';
-import Button from './Button';
+import Button from '../ui/Button';
 
 type HostGameFooterProps = {
   onReset: () => void;
