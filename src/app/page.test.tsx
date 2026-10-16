@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import Home from './page';
 
 const pushMock = vi.fn();
@@ -11,99 +11,67 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-vi.mock('next/form', () => ({
-  default: ({
-    children,
-    action,
-    ...props
-  }: {
-    children: React.ReactNode;
-    action: () => void;
-  }) => (
-    <form
-      {...props}
-      onSubmit={(event) => {
-        event.preventDefault();
-        action();
-      }}>
-      {children}
-    </form>
-  ),
-}));
-
 describe('Home', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('renders the page', () => {
     render(<Home />);
 
     expect(
-      screen.getByRole('heading', { name: 'WordCloud' }),
+      screen.getByRole('heading', { name: 'Create a session' }),
     ).toBeInTheDocument();
 
     expect(
       screen.getByText('Give your session a topic to get started'),
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByRole('button', { name: 'startStart' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
   });
 
   it('does not start a session when the subject is empty', async () => {
     const user = userEvent.setup();
-
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue({} as Response);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
 
     render(<Home />);
 
-    const button = screen.getByRole('button', {
-      name: 'startStart',
-    });
+    const button = screen.getByRole('button', { name: 'Start' });
 
-    const consoleError = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    expect(button).toBeDisabled();
 
     await user.click(button);
 
-    expect(consoleError).toHaveBeenCalledWith('Subject is required');
-
     expect(fetchMock).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
-
-    consoleError.mockRestore();
-    fetchMock.mockRestore();
   });
 
   it('starts a session and navigates to the host page', async () => {
     const user = userEvent.setup();
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        json: vi.fn().mockResolvedValue({
-          id: '123',
-        }),
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        id: '123',
       }),
-    );
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
 
     render(<Home />);
 
     const input = screen.getByRole('textbox');
-    const button = screen.getByRole('button', {
-      name: 'startStart',
-    });
+    const button = screen.getByRole('button', { name: 'Start' });
 
     await user.type(input, 'React Testing');
-
     await user.click(button);
 
-    expect(fetch).toHaveBeenCalledWith('/api/session', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,6 +81,42 @@ describe('Home', () => {
       }),
     });
 
-    expect(pushMock).toHaveBeenCalledWith('/host/123');
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/host/123');
+    });
+  });
+
+  it('shows an error when session creation fails', async () => {
+    const user = userEvent.setup();
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const consoleErrorMock = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    try {
+      render(<Home />);
+
+      const input = screen.getByRole('textbox');
+      const button = screen.getByRole('button', { name: 'Start' });
+
+      await user.type(input, 'React Testing');
+      await user.click(button);
+
+      expect(
+        await screen.findByText('Could not start a game. Please try again.'),
+      ).toBeInTheDocument();
+
+      expect(button).toBeEnabled();
+      expect(pushMock).not.toHaveBeenCalled();
+    } finally {
+      consoleErrorMock.mockRestore();
+    }
   });
 });
