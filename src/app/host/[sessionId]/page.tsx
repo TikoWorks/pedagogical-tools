@@ -65,15 +65,15 @@ export default function HostPage() {
     void getSessionData();
   }, []);
 
+  const sessionId = sessionData?.id;
+
   useEffect(() => {
-    if (!sessionData) {
-      return;
-    }
+    if (!sessionId) return;
 
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
-        const response = await fetch(`/api/submission/`, {
+        const response = await fetch('/api/submission/', {
           method: 'GET',
         });
 
@@ -112,9 +112,7 @@ export default function HostPage() {
       }
     }
 
-    getSubmissionsData();
-
-    const sessionId = sessionData.id;
+    void getSubmissionsData();
 
     // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
@@ -157,39 +155,7 @@ export default function HostPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionData]);
-
-  if (isLoadingSession) {
-    return (
-      <main className="flex h-dvh items-center justify-center bg-tumma">
-        <LoadingMessage
-          message="Loading session..."
-          className="text-[1.5rem]"
-        />
-      </main>
-    );
-  }
-
-  if (sessionError || !sessionData) {
-    return (
-      <main className="flex h-dvh flex-col items-center justify-center gap-6 bg-tumma">
-        <ErrorMessage
-          message={sessionError || 'Session not found.'}
-          className="text-[1.5rem]"
-        />
-
-        <Button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="w-40 bg-magenta hover:bg-[#AA0045]"
-        >
-          Try again
-        </Button>
-      </main>
-    );
-  }
-
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+  }, [sessionId]);
 
   // Session nimen vaihto
   async function updateSessionName(name: string) {
@@ -254,6 +220,40 @@ export default function HostPage() {
       setIsResetting(false);
     }
   }
+
+  // Näytetään latausviesti, kun istunnon tietoja haetaan
+  if (isLoadingSession) {
+    return (
+      <main className="flex h-dvh items-center justify-center bg-tumma">
+        <LoadingMessage
+          message="Loading session..."
+          className="text-[1.5rem]"
+        />
+      </main>
+    );
+  }
+
+  // Näytetään virheilmoitus ja mahdollisuus yrittää uudelleen
+  if (sessionError || !sessionData) {
+    return (
+      <main className="flex h-dvh flex-col items-center justify-center gap-6 bg-tumma">
+        <ErrorMessage
+          message={sessionError || 'Session not found.'}
+          className="text-[1.5rem]"
+        />
+
+        <Button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-40 bg-magenta hover:bg-[#AA0045]"
+        >
+          Try again
+        </Button>
+      </main>
+    );
+  }
+
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
