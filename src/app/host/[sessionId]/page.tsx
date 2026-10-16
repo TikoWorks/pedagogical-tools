@@ -6,6 +6,9 @@ import HostGameHeader from '@/components/host/HostGameHeader';
 import HostGameFooter from '@/components/host/HostGameFooter';
 import WordCloud from '@/components/host/WordCloud';
 import ResetConfirmation from '@/components/host/ResetConfirmation';
+import LoadingMessage from '@/components/ui/LoadingMessage';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import Button from '@/components/ui/Button';
 import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
@@ -15,51 +18,62 @@ type RawSubmission = {
 };
 
 export default function HostPage() {
-  // Sessionin datan muuttuja
+  // Session
   const [sessionData, setSessionData] = useState<Session | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [sessionError, setSessionError] = useState('');
+
+  // Submissions
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
+  const [isLoadingWords, setIsLoadingWords] = useState(true);
+  const [wordsError, setWordsError] = useState('');
+
+  // Session name päivitys
   const [sessionName, setSessionName] = useState('');
   const [sessionNameDraft, setSessionNameDraft] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [saveNameError, setSaveNameError] = useState('');
+
+  // Reset
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   // Session datan haku
   useEffect(() => {
     async function getSessionData() {
       try {
-        const response = await fetch(`/api/session/`, {
-          method: 'GET',
-        });
+        const response = await fetch('/api/session');
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch session: ${response.status} ${response.statusText}`,
-          );
+          throw new Error('Failed to fetch session');
         }
 
         const data = await response.json();
+
         setSessionData(data);
         setSessionName(data.name);
         setSessionNameDraft(data.name);
       } catch (error) {
-        console.error('getSessionData error: ', error);
-        throw error;
+        console.error('getSessionData error:', error);
+        setSessionError('Could not load session. Please try again.');
+      } finally {
+        setIsLoadingSession(false);
       }
     }
 
-    getSessionData();
-
-    // Funktio ajetaan komponentin alustuksessa
+    void getSessionData();
   }, []);
 
+  const sessionId = sessionData?.id;
+
   useEffect(() => {
-    if (!sessionData) {
-      return;
-    }
+    if (!sessionId) return;
 
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
-        const response = await fetch(`/api/submission/`, {
+        const response = await fetch('/api/submission/', {
           method: 'GET',
         });
 
@@ -91,14 +105,14 @@ export default function HostPage() {
 
         setSubmissionsData(grouped);
       } catch (error) {
-        console.error('getSubmissionsData error: ', error);
-        throw error;
+        console.error('getSubmissionsData error:', error);
+        setWordsError('Could not load words. Please try again.');
+      } finally {
+        setIsLoadingWords(false);
       }
     }
 
-    getSubmissionsData();
-
-    const sessionId = sessionData.id;
+    void getSubmissionsData();
 
     // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
@@ -141,16 +155,15 @@ export default function HostPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionData]);
-
-  if (!sessionData) {
-    return <div>Loading...</div>;
-  }
-
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+  }, [sessionId]);
 
   // Session nimen vaihto
   async function updateSessionName(name: string) {
+    if (isSavingName) return;
+
+    setIsSavingName(true);
+    setSaveNameError('');
+
     try {
       const response = await fetch('/api/session', {
         method: 'PATCH',
@@ -158,7 +171,7 @@ export default function HostPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
         }),
       });
 
@@ -173,12 +186,20 @@ export default function HostPage() {
       setSessionName(updatedSession.name);
       setSessionNameDraft(updatedSession.name);
     } catch (error) {
-      console.error('updateSessionName error: ', error);
+      console.error('updateSessionName error:', error);
+      setSaveNameError('Could not save session name. Please try again.');
+    } finally {
+      setIsSavingName(false);
     }
   }
 
   //Submissioneiden poistaminen
   async function resetSubmissions() {
+    if (isResetting) return;
+
+    setIsResetting(true);
+    setResetError('');
+
     try {
       const response = await fetch('/api/submission', {
         method: 'DELETE',
@@ -194,8 +215,45 @@ export default function HostPage() {
       setShowResetConfirmation(false);
     } catch (error) {
       console.error('resetSubmissions error:', error);
+      setResetError('Could not reset word cloud. Please try again.');
+    } finally {
+      setIsResetting(false);
     }
   }
+
+  // Näytetään latausviesti, kun istunnon tietoja haetaan
+  if (isLoadingSession) {
+    return (
+      <main className="flex h-dvh items-center justify-center bg-tumma">
+        <LoadingMessage
+          message="Loading session..."
+          className="text-[1.5rem]"
+        />
+      </main>
+    );
+  }
+
+  // Näytetään virheilmoitus ja mahdollisuus yrittää uudelleen
+  if (sessionError || !sessionData) {
+    return (
+      <main className="flex h-dvh flex-col items-center justify-center gap-6 bg-tumma">
+        <ErrorMessage
+          message={sessionError || 'Session not found.'}
+          className="text-[1.5rem]"
+        />
+
+        <Button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-40 bg-magenta hover:bg-[#AA0045]"
+        >
+          Try again
+        </Button>
+      </main>
+    );
+  }
+
+  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
@@ -203,14 +261,29 @@ export default function HostPage() {
 
       {showResetConfirmation && (
         <ResetConfirmation
-          onCancel={() => setShowResetConfirmation(false)}
+          onCancel={() => {
+            setResetError('');
+            setShowResetConfirmation(false);
+          }}
           onReset={resetSubmissions}
+          isResetting={isResetting}
+          resetError={resetError}
         />
       )}
       <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
-
-      {submissionsData.length === 0 ? (
-        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:pb-24 2xl:gap-6">
+      {isLoadingWords ? (
+        <section className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+          <LoadingMessage
+            message="Loading words..."
+            className="text-[1.5rem]"
+          />
+        </section>
+      ) : wordsError ? (
+        <section className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+          <ErrorMessage message={wordsError} className="text-[1.5rem]" />
+        </section>
+      ) : submissionsData.length === 0 ? (
+        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:gap-6 2xl:pb-24">
           <Image
             className="h-40 w-40"
             src="/images/cloud.svg"
@@ -229,8 +302,13 @@ export default function HostPage() {
       )}
       <HostGameFooter
         sessionName={sessionNameDraft}
-        onSessionNameChange={setSessionNameDraft}
+        onSessionNameChange={(name) => {
+          setSessionNameDraft(name);
+          setSaveNameError('');
+        }}
         onSessionNameSave={updateSessionName}
+        isSavingName={isSavingName}
+        saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
       />
     </main>
