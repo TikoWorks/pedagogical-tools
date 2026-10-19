@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/image', () => ({
   default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img {...props} />
+    <img {...props} alt={props.alt ?? ''} />
   ),
 }));
 
@@ -21,7 +21,7 @@ describe('UserPage', () => {
     vi.clearAllMocks();
 
     mockUseParams.mockReturnValue({
-      join_code: 'TEST123',
+      joinCode: 'TEST123',
     });
 
     global.fetch = vi.fn();
@@ -60,12 +60,27 @@ describe('UserPage', () => {
 
   it('does not add a participant when the join code is missing', () => {
     mockUseParams.mockReturnValue({
-      join_code: undefined,
+      joinCode: undefined,
     });
 
     render(<UserPage />);
 
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('shows an error when joining the game fails', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+    } as Response);
+
+    render(<UserPage />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Unable to join the game. Please try scanning the QR code again.',
+    );
+
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
   });
 
   it('updates the input and character counter', async () => {
@@ -120,6 +135,7 @@ describe('UserPage', () => {
 
     expect(input).toHaveValue('');
     expect(screen.getByText('0/25 characters')).toBeInTheDocument();
+
     expect(
       screen.queryByRole('button', { name: 'Clear input' }),
     ).not.toBeInTheDocument();
@@ -128,8 +144,6 @@ describe('UserPage', () => {
   it('submits a word successfully', async () => {
     const user = userEvent.setup();
 
-    // Override the default participant response and add
-    // a response for the submission request.
     vi.mocked(fetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -142,13 +156,17 @@ describe('UserPage', () => {
 
     render(<UserPage />);
 
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
     await user.type(screen.getByRole('textbox'), 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    const sendButton = screen.getByRole('button', {
+      name: 'Send',
+    });
+
+    await waitFor(() => {
+      expect(sendButton).toBeEnabled();
+    });
+
+    await user.click(sendButton);
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/submission/', {
@@ -170,7 +188,7 @@ describe('UserPage', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
-  it('shows the sending state while the submission is in progress', async () => {
+  it('shows the sending state while submission is in progress', async () => {
     const user = userEvent.setup();
 
     let resolveSubmission!: (response: Response) => void;
@@ -188,13 +206,17 @@ describe('UserPage', () => {
 
     render(<UserPage />);
 
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
     await user.type(screen.getByRole('textbox'), 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    const sendButton = screen.getByRole('button', {
+      name: 'Send',
+    });
+
+    await waitFor(() => {
+      expect(sendButton).toBeEnabled();
+    });
+
+    await user.click(sendButton);
 
     expect(await screen.findByText('Sending...')).toBeInTheDocument();
 
@@ -210,7 +232,7 @@ describe('UserPage', () => {
     expect(await screen.findByText('Word sent!')).toBeInTheDocument();
   });
 
-  it('returns to the input view when submission fails', async () => {
+  it('shows an error and preserves the word when submission fails', async () => {
     const user = userEvent.setup();
 
     vi.mocked(fetch)
@@ -221,27 +243,30 @@ describe('UserPage', () => {
       .mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ error: 'Server error' }),
       } as Response);
 
     render(<UserPage />);
 
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
     await user.type(screen.getByRole('textbox'), 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    const sendButton = screen.getByRole('button', {
+      name: 'Send',
+    });
 
     await waitFor(() => {
-      expect(screen.getByRole('textbox')).toBeInTheDocument();
+      expect(sendButton).toBeEnabled();
     });
+
+    await user.click(sendButton);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to send word. Please try again.',
+    );
 
     expect(screen.getByRole('textbox')).toHaveValue('hello');
   });
 
-  it('returns to the input view when the submission request throws', async () => {
+  it('shows an error when the submission request throws', async () => {
     const user = userEvent.setup();
 
     vi.mocked(fetch)
@@ -253,20 +278,26 @@ describe('UserPage', () => {
 
     render(<UserPage />);
 
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
     await user.type(screen.getByRole('textbox'), 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    const sendButton = screen.getByRole('button', {
+      name: 'Send',
+    });
 
     await waitFor(() => {
-      expect(screen.getByRole('textbox')).toBeInTheDocument();
+      expect(sendButton).toBeEnabled();
     });
+
+    await user.click(sendButton);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to send word. Please try again.',
+    );
+
+    expect(screen.getByRole('textbox')).toHaveValue('hello');
   });
 
-  it('allows the user to add another word after a successful submission', async () => {
+  it('allows the user to add another word after successful submission', async () => {
     const user = userEvent.setup();
 
     vi.mocked(fetch)
@@ -281,13 +312,17 @@ describe('UserPage', () => {
 
     render(<UserPage />);
 
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
     await user.type(screen.getByRole('textbox'), 'hello');
 
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    const sendButton = screen.getByRole('button', {
+      name: 'Send',
+    });
+
+    await waitFor(() => {
+      expect(sendButton).toBeEnabled();
+    });
+
+    await user.click(sendButton);
 
     expect(await screen.findByText('Word sent!')).toBeInTheDocument();
 

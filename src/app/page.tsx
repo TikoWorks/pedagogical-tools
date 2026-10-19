@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import SessionNameInput from '@/components/host/SessionNameInput';
-import HostHeader from '@/components/host/HostHeader';
+import WordCloudHeader from '@/components/ui/WordCloudHeader';
 import LoadingMessage from '@/components/ui/LoadingMessage';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -45,7 +45,7 @@ export default function Home() {
       <div className="absolute -inset-0.5 bg-[url('/images/host_background.svg')] bg-size-[100%_100%] bg-no-repeat" />
 
       <div className="relative z-10 flex flex-1 flex-col items-center mt-15">
-        <HostHeader />
+        <WordCloudHeader />
 
         <div className="flex flex-col items-center justify-center text-white pt-30">
           <h2 className="font-bold text-[3rem] 2xl:text-[4rem]">
