@@ -193,6 +193,31 @@ export default function HostPage() {
     }
   }
 
+  async function handlePauseResume() {
+    if (!sessionData) return;
+
+    const newState = sessionData.state === 'active' ? 'paused' : 'active';
+
+    try {
+      const response = await fetch('/api/session', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ state: newState }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update session state');
+      }
+
+      const updatedSession = await response.json();
+      setSessionData(updatedSession);
+    } catch (error) {
+      console.error('handlePauseResume error:', error);
+    }
+  }
+
   //Submissioneiden poistaminen
   async function resetSubmissions() {
     if (isResetting) return;
@@ -302,6 +327,7 @@ export default function HostPage() {
       )}
       <HostGameFooter
         sessionName={sessionNameDraft}
+        state={sessionData.state}
         onSessionNameChange={(name) => {
           setSessionNameDraft(name);
           setSaveNameError('');
@@ -310,6 +336,7 @@ export default function HostPage() {
         isSavingName={isSavingName}
         saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
+        handlePauseResume={handlePauseResume}
       />
     </main>
   );
