@@ -1,4 +1,12 @@
-// Ensimmäinen Smoke -testi
+/* Ensimmäinen Smoke -testi
+     * Smoke-testi: session luominen.
+     *
+     * Tarkoitus: varmistaa sovelluksen peruspolku eli session luonti etusivulta
+     * ja siirtyminen host-näkymään.
+     *
+     * Kattaa: nimen syöttö, aloituspainike, siirtyminen /host/-reitille ja
+     * session nimen näkyminen.
+     * Ei kata: opiskelijan näkymää eikä validointeja (ks. host.cy.ts ja participant.cy.ts).*/
 
 // Määritellään testikokonaisuus (suite), joka käsittelee session luomista
 describe('Sessionin luominen', () => {
