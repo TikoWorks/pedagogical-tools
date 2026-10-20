@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, type FocusEvent } from 'react';
 
 type SessionNameInputProps = {
   sessionName: string;
@@ -14,14 +14,19 @@ export default function SessionNameInput({
 }: SessionNameInputProps) {
   const [error, setError] = useState('');
 
-  async function handleBlur() {
-    if (!sessionName.trim()) {
+  // arvo luetaan suoraan kentästä (event.target.value) eikä propsista,
+  // jotta validointi toimii myös silloin, kun vanhempi komponentti ei ehdi
+  // päivittää sessionName-tilaa ennen blur-tapahtumaa.
+  async function handleBlur(event: FocusEvent<HTMLInputElement>) {
+    const value = event.target.value;
+
+    if (!value.trim()) {
       setError('Session name is required');
       return;
     }
 
     setError('');
-    await onSessionNameSave?.(sessionName);
+    await onSessionNameSave?.(value);
   }
 
   return (
@@ -33,11 +38,22 @@ export default function SessionNameInput({
       )}
 
       <input
-          data-testid="session-name-input"
-          className="bg-tumma/50 h-12 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
+        // lisätään data-testid, jotta testit voivat löytää kentän helposti
+        data-testid="session-name-input"
+        className="bg-tumma/50 h-12 w-full rounded-2xl border-3 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
         type="text"
         value={sessionName}
-        onChange={(event) => onSessionNameChange(event.target.value)}
+        // (Issue #77): virheilmoitus poistetaan heti, kun käyttäjä
+        // kirjoittaa kelvollisen nimen. Aiemmin ilmoitus pysyi näkyvissä
+        // seuraavaan blur-tapahtumaan asti, vaikka nimi oli jo korjattu.
+        // Pelkät välilyönnit eivät poista ilmoitusta (trim).
+        onChange={(event) => {
+          onSessionNameChange(event.target.value);
+
+          if (event.target.value.trim()) {
+            setError('');
+          }
+        }}
         onBlur={handleBlur}
       />
 

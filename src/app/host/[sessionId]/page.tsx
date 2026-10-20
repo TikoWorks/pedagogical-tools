@@ -1,12 +1,12 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import Image from 'next/image';
-import HostGameHeader from '@/components/host/HostGameHeader';
-import HostGameFooter from '@/components/host/HostGameFooter';
-import WordCloud from '@/components/host/WordCloud';
-import ResetConfirmation from '@/components/host/ResetConfirmation';
-import type { Session, Submission } from '@/types';
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import Image from "next/image";
+import HostGameHeader from "@/components/host/HostGameHeader";
+import HostGameFooter from "@/components/host/HostGameFooter";
+import WordCloud from "@/components/host/WordCloud";
+import ResetConfirmation from "@/components/host/ResetConfirmation";
+import type { Session, Submission } from "@/types";
 
 type RawSubmission = {
   data: {
@@ -18,16 +18,23 @@ export default function HostPage() {
   // Sessionin datan muuttuja
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
-  const [sessionName, setSessionName] = useState('');
-  const [sessionNameDraft, setSessionNameDraft] = useState('');
+  const [sessionName, setSessionName] = useState("");
+  const [sessionNameDraft, setSessionNameDraft] = useState("");
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  // virhetila latausvirheille. Aiemmin virhe heitettiin (throw)
+  // eikä sitä käsitelty, jolloin komponentti jäi loputtomaan Loading-tilaan.
+  const [loadError, setLoadError] = useState("");
 
   // Session datan haku
   useEffect(() => {
+    // Peruutuslippu estää vanhentuneen vastauksen (Strict Moden kaksoisajo
+    // kehitystilassa) ylikirjoittamasta nimikenttää kesken muokkauksen.
+    let cancelled = false;
+
     async function getSessionData() {
       try {
         const response = await fetch(`/api/session/`, {
-          method: 'GET',
+          method: "GET",
         });
 
         if (!response.ok) {
@@ -37,30 +44,51 @@ export default function HostPage() {
         }
 
         const data = await response.json();
+
+        if (cancelled) {
+          return;
+        }
+
         setSessionData(data);
         setSessionName(data.name);
         setSessionNameDraft(data.name);
       } catch (error) {
-        console.error('getSessionData error: ', error);
-        throw error;
+        console.error("getSessionData error: ", error);
+        // throw poistettu, virhe näytetään käyttäjälle.
+        if (!cancelled) {
+          setLoadError("Session could not be loaded.");
+        }
       }
     }
 
     getSessionData();
 
+    return () => {
+      cancelled = true;
+    };
+
     // Funktio ajetaan komponentin alustuksessa
   }, []);
 
+  // effectin riippuvuus on sessionId, ei koko sessionData-olio.
+  // Aiemmin jokainen nimenmuutos (setSessionData(updatedSession)) loi uuden
+  // olion, mikä haki submissionit uudelleen ja uudelleenluoi realtime-kanavan.
+  const sessionId = sessionData?.id;
+
   useEffect(() => {
-    if (!sessionData) {
+    if (!sessionId) {
       return;
     }
+
+    // peruutuslippu myös submissioneille, jotta vanha GET-vastaus
+    // ei ylikirjoita tilaa, kun effect on jo siivottu.
+    let cancelled = false;
 
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
         const response = await fetch(`/api/submission/`, {
-          method: 'GET',
+          method: "GET",
         });
 
         if (!response.ok) {
@@ -89,26 +117,28 @@ export default function HostPage() {
           }
         });
 
+        if (cancelled) {
+          return;
+        }
+
         setSubmissionsData(grouped);
       } catch (error) {
-        console.error('getSubmissionsData error: ', error);
-        throw error;
+        // throw poistettu, virhe vain lokiin (sanapilvi pysyy tyhjänä).
+        console.error("getSubmissionsData error: ", error);
       }
     }
 
     getSubmissionsData();
 
-    const sessionId = sessionData.id;
-
     // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
       .channel(`session:${sessionId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'submission',
+          event: "INSERT",
+          schema: "public",
+          table: "submission",
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
@@ -139,23 +169,44 @@ export default function HostPage() {
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [sessionData]);
+  }, [sessionId]);
+
+  // latausvirhe näytetään eikä jäädä loputtomaan Loading-tilaan.
+  if (loadError) {
+    return (
+      <div role="alert">
+        {loadError}{" "}
+        <button type="button" onClick={() => window.location.reload()}>
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   if (!sessionData) {
     return <div>Loading...</div>;
   }
 
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+  // varavaihtoehto, jos NEXT_PUBLIC_APP_URL puuttuu. Aiemmin
+  // tuloksena oli "undefined/join/..." eli rikkinäinen QR-koodi.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  const joinUrl = `${appUrl}/join/${sessionData.join_code}`;
 
   // Session nimen vaihto
   async function updateSessionName(name: string) {
+    // ei lähetetä PATCH-kutsua, jos nimi ei ole muuttunut.
+    if (name.trim() === sessionName) {
+      return;
+    }
+
     try {
-      const response = await fetch('/api/session', {
-        method: 'PATCH',
+      const response = await fetch("/api/session", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name,
@@ -173,15 +224,18 @@ export default function HostPage() {
       setSessionName(updatedSession.name);
       setSessionNameDraft(updatedSession.name);
     } catch (error) {
-      console.error('updateSessionName error: ', error);
+      console.error("updateSessionName error: ", error);
+      // Muokkaus epäonnistui, joten palautetaan luonnos
+      // tallennettuun nimeen. Näin kenttä ja otsikko eivät jää eri arvoihin.
+      setSessionNameDraft(sessionName);
     }
   }
 
   //Submissioneiden poistaminen
   async function resetSubmissions() {
     try {
-      const response = await fetch('/api/submission', {
-        method: 'DELETE',
+      const response = await fetch("/api/submission", {
+        method: "DELETE",
       });
 
       if (!response.ok) {
@@ -193,7 +247,7 @@ export default function HostPage() {
       setSubmissionsData([]);
       setShowResetConfirmation(false);
     } catch (error) {
-      console.error('resetSubmissions error:', error);
+      console.error("resetSubmissions error:", error);
     }
   }
 
