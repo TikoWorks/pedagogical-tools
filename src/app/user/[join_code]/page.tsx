@@ -90,6 +90,7 @@ export default function UserPage() {
             <div>
               <div className="relative">
                 <input
+                  data-testid="word-input"
                   type="text"
                   placeholder="Type here..."
                   maxLength={25}
@@ -114,6 +115,7 @@ export default function UserPage() {
             </div>
 
             <button
+              data-testid="send-word"
               type="submit"
               disabled={!inputWord.trim()}
               className="bg-magenta text-white font-semibold py-3 px-2 rounded-xl disabled:bg-gray-500">
