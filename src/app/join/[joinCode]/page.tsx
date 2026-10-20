@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useParams } from 'next/navigation';
 import SubmissionForm from '@/components/join/SubmissionForm';
 import SendingView from '@/components/join/SendingView';
@@ -13,13 +14,18 @@ export default function UserPage() {
   const [participantId, setParticipantID] = useState('');
   const [status, setStatus] = useState<Status>('input');
   const [error, setError] = useState('');
+  const [isPaused, setIsPaused] = useState(false);
 
   const { joinCode } = useParams<{ joinCode: string }>();
 
   // Osallistujan luominen
   useEffect(() => {
+    if (!joinCode) return;
+
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
+
     async function addParticipant() {
-      if (!joinCode) return;
       try {
         const response = await fetch('/api/participant/', {
           method: 'POST',
@@ -32,8 +38,43 @@ export default function UserPage() {
         }
 
         const data = await response.json();
+
+        if (cancelled) return;
+
         setParticipantID(data.id);
+        setIsPaused(data.state === 'paused');
+
+        console.log('Session ID:', data.sessionId);
+        console.log('Initial state:', data.state);
+        // Realtime kuuntelu state tilalle
+
+        channel = supabase
+          .channel(`session:${data.sessionId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'session',
+              filter: `id=eq.${data.sessionId}`,
+            },
+            (payload) => {
+              console.log('Realtime payload:', payload);
+              console.log('New session state:', payload.new.state);
+
+              setIsPaused(payload.new.state === 'paused');
+            },
+          )
+          .subscribe((status, err) => {
+            console.log('Realtime status:', status);
+
+            if (err) {
+              console.error('Realtime error:', err);
+            }
+          });
       } catch (error) {
+        if (cancelled) return;
+
         console.error('addParticipant error:', error);
         setError(
           'Unable to join the game. Please try scanning the QR code again.',
@@ -42,7 +83,19 @@ export default function UserPage() {
     }
 
     void addParticipant();
+
+    return () => {
+      cancelled = true;
+
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
   }, [joinCode]);
+
+  useEffect(() => {
+    console.log('UserPage isPaused:', isPaused);
+  }, [isPaused]);
 
   // Sanan lähettäminen
   async function handleAdd(e: React.SubmitEvent<HTMLFormElement>) {
@@ -85,6 +138,7 @@ export default function UserPage() {
           onSubmit={handleAdd}
           participantId={participantId}
           error={error}
+          isPaused={isPaused}
         />
       )}
 

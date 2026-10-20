@@ -13,10 +13,10 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid join code' }, { status: 400 });
   }
 
-  // Haetaan session id join coden perusteella kannasta
+  // Haetaan session id ja state join coden perusteella kannasta
   const { data: session, error: sessionError } = await supabaseServer
     .from('session')
-    .select('id')
+    .select('id, state')
     .eq('join_code', body.joinCode.trim().toUpperCase())
     .single();
 
@@ -35,5 +35,12 @@ export async function POST(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
-  return Response.json(data, { status: 201 });
+  return Response.json(
+    {
+      ...data,
+      sessionId: session.id,
+      state: session.state,
+    },
+    { status: 201 },
+  );
 }
