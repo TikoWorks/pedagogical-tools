@@ -1,18 +1,18 @@
 # Testaussuunnitelma: Pedagoginen sanapilvisovellus
 
-**Versio:** 0.2
-**Päivämäärä:** 21.09.2026
-**Testattava versio:** [commit / staging-URL]
+**Versio:** 1.1
+**Päivämäärä:** 20.10.2026
+**Testattava versio:** paikallinen Next.js-kehitysympäristö, localhost:3000
 
 ## 1. Tarkoitus ja rajaus
 
-Sanapilvi on anonyymi, reaaliaikainen pedagoginen työkalu. Esittäjä luo session, jakaa osallistumislinkin tai QR-koodin ja osallistujat lähettävät sanoja. Esittäjän näkymä näyttää sanojen lukumäärät sanapilvenä.
+Sanapilvi on anonyymi, reaaliaikainen pedagoginen työkalu. Esittäjä luo session, jonka osallistumisosoite esitetään QR-koodina, ja osallistujat lähettävät sanoja. Esittäjän näkymä näyttää sanojen lukumäärät sanapilvenä.
 
 Tämä suunnitelma koskee ensin nykyistä MVP:tä:
 
 - session luonti aloitussivulta
 - esittäjän sessionäkymä
-- osallistumislinkki ja QR-koodi
+- osallistumisosoite ja QR-koodi
 - sanan lähettäminen osallistujanäkymästä
 - Supabase-tallennus ja Realtime-päivitys
 - sanojen laskenta ja D3-sanapilven visualisointi
@@ -27,11 +27,11 @@ Testauksen tavoitteena on varmistaa, että:
 - syötteen rajat ja virhetilanteet käsitellään ymmärrettävästi
 - vain oikean session sanat näkyvät kyseisen session pilvessä
 - sanapilvi päivittyy reaaliaikaisesti ja laskee toistot oikein
-- QR-koodi ja linkki johtavat toimivaan osallistumisnäkymään
+- QR-koodi sisältää osallistumisosoitteen `/join/<joinCode>` ja johtaa osallistumisnäkymään
 - käyttö toimii sovituilla selaimilla, mobiilissa ja näppäimistöllä
 - anonyymi käyttö ei paljasta tarpeettomia henkilötietoja
-- Supabase RLS, session-eristys ja käyttörajat vastaavat hyväksyttyä riskiä
-- julkaisu voidaan ajaa valitussa ilmaisessa ympäristössä ilman pakollista luottokorttia
+- Supabase RLS, session-eristys ja käyttörajat ovat erikseen suunniteltuja tarkistuksia; niitä ei ole tässä testituloksessa toteutettuina testeinä
+- toteutuneet automaattiset testit, pending-testit ja avoin testivelka on eroteltu
 
 ## 3. Testattava toiminnallisuus
 
@@ -40,25 +40,25 @@ Testauksen tavoitteena on varmistaa, että:
 | ID     | Testi                                                      | Odotettu tulos                                                        | Prioriteetti |
 | ------ | ---------------------------------------------------------- | --------------------------------------------------------------------- | ------------ |
 | MVP-01 | Avaa aloitussivu toimivilla Supabase-asetuksilla           | Luontipainike näkyy ja on käytettävissä                               | P0           |
-| MVP-02 | Luo uusi sanapilvi                                         | Uusi session syntyy ja käyttäjä siirtyy `/session/[id]`-näkymään      | P0           |
+| MVP-02 | Luo uusi sanapilvi                                         | Uusi session syntyy ja käyttäjä siirtyy `/host/[sessionId]`-näkymään | P0           |
 | MVP-03 | Luo useita sessioita peräkkäin                             | Jokaisella on yksilöllinen tunniste ja omat sanat                     | P1           |
 | MVP-04 | Avaa aloitussivu ilman Supabase-asetuksia                  | Käyttäjälle näytetään ymmärrettävä ohje; luonti ei käynnisty          | P1           |
-| MVP-05 | Avaa esittäjän näkymä suoraan kelvollisella session ID:llä | Näkymä latautuu ja odotusteksti näkyy ilman sanoja                    | P0           |
-| MVP-06 | Tarkista QR-koodi ja osallistumislinkki                    | Molemmat sisältävät saman session ID:n ja avaavat osallistumisnäkymän | P0           |
-| MVP-07 | Kopioi linkki selaimen Clipboard API:lla ja ilman sitä     | Onnistuminen näytetään; epäonnistuminen ei riko näkymää               | P1           |
+| MVP-05 | Avaa esittäjän näkymä `/host/[sessionId]`-reitillä         | Host-sivu hakee session host_token-evästeen perusteella               | P0           |
+| MVP-06 | Tarkista QR-koodi                                           | QR-koodi sisältää osallistumisosoitteen `/join/[joinCode]`            | P0           |
+| MVP-07 | Tarkista tekstimuotoinen osallistumislinkki ja kopiointi    | TARKISTETTAVA: nykyisessä UI:ssa ei ole näkyvää tekstilinkkiä tai kopiointitoimintoa | P1 |
 
 ### 3.2 Osallistujan sanan lähettäminen
 
 | ID     | Testi                                                           | Odotettu tulos                                                                                    | Prioriteetti |
 | ------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------ |
 | MVP-08 | Lähetä tavallinen sana                                          | Sana tallennetaan ja onnistumisilmoitus näytetään                                                 | P0           |
-| MVP-09 | Lähetä sana pienillä kirjaimilla ja ympäröivillä välilyönneillä | Tallennettu arvo on trimattu ja normalisoitu isoksi                                               | P0           |
+| MVP-09 | Lähetä sana pienillä kirjaimilla ja ympäröivillä välilyönneillä | Submission lähetetään trimmattuna; host normalisoi sanan visualisointia varten trim- ja lowercase-logiikalla | P0 |
 | MVP-10 | Lähetä tyhjä tai vain välilyöntejä sisältävä arvo               | Lähetys estyy eikä tyhjää riviä tallenneta                                                        | P0           |
-| MVP-11 | Syötä 30 merkkiä                                                | Syöte voidaan hyväksyä                                                                            | P1           |
-| MVP-12 | Ylitä 30 merkin raja tai ohita selainrajoite pyynnöllä          | Supabase hylkää syötteen hallitusti; käyttöliittymä ei väitä onnistumista                         | P0           |
+| MVP-11 | Syötä 25 merkkiä                                                | Syöte voidaan hyväksyä                                                                            | P1           |
+| MVP-12 | Ylitä 25 merkin raja tai ohita selainrajoite pyynnöllä          | TARKISTETTAVA: käyttöliittymä rajoittaa 25 merkkiin; API-tason pituusrajan käyttäytymistä ei ole tässä testikokonaisuudessa varmistettu | P0 |
 | MVP-13 | Lähetä erikoismerkkejä, ääkkösiä, emoji ja useita sanoja        | Sovittu tekstisisältö säilyy turvallisesti; käyttöliittymä ei suorita sisältöä                    | P1           |
 | MVP-14 | Paina lähetystä nopeasti useita kertoja                         | Lähetyksen aikainen esto estää tahattoman tuplalähetyksen; palvelinrajoitukset testataan erikseen | P1           |
-| MVP-15 | Lähetä sana olemattomaan session ID:hen                         | Käyttäjälle näytetään epäonnistuminen eikä vastausta tallenneta                                   | P0           |
+| MVP-15 | Lähetä sana virheellisellä participant ID:llä                    | Käyttäjälle näytetään epäonnistuminen eikä vastausta tallenneta                                   | P0           |
 
 ### 3.3 Realtime-sanapilvi
 
@@ -72,9 +72,11 @@ Testauksen tavoitteena on varmistaa, että:
 | MVP-21 | Sulje sessionäkymä tai navigoi pois                     | Realtime-tilaus poistuu eikä vanha näkymä saa päivityksiä                                         | P1           |
 | MVP-22 | Katkaise verkko lähetyksen tai Realtime-yhteyden aikana | Virhe näkyy käyttäjälle tai yhteys palautuu määritellyllä tavalla ilman virheellistä onnistumista | P1           |
 
+Host-reitti on `/host/<sessionId>`, mutta host-sivu hakee session tiedot `host_token`-evästeen perusteella. Osallistujan reitti on `/join/<joinCode>`. Session luonnin yhteydessä API luo kuusimerkkisen joinCoden, joka palautetaan session mukana; host muodostaa siitä QR-koodiin osallistumisosoitteen. Nykyisessä käyttöliittymässä ei ole näkyvää tekstimuotoista join-linkkiä eikä kopiointitoimintoa.
+
 ## 4. Testitasot ja menetelmät
 
-### Yksikkö- ja integraatiotestaus
+### Yksikkö- ja komponenttitestaus
 
 Kun logiikka erotellaan komponenteista testattaviksi moduuleiksi, testataan vähintään:
 
@@ -82,22 +84,27 @@ Kun logiikka erotellaan komponenteista testattaviksi moduuleiksi, testataan väh
 - tyhjän, liian pitkän ja sallitun syötteen käsittely
 - sanojen esiintymien laskenta ja deterministinen järjestys
 - visualisointidatan koon ja värin muodostus
-- session ID:n käyttö kyselyiden suodattimena
+- joinCode-pohjainen participantin luonti
+- participant ID:n käyttö submission-kutsussa
 - onnistumis- ja virhetilan tilasiirtymät
 
-Nykyisessä koodissa nämä eivät kaikki ole erillisiä funktioita. Testattavaa käyttäytymistä ei saa jättää testaamatta vain siksi, että se on tällä hetkellä Svelte-komponentin sisällä.
+Vitestillä ja React Testing Libraryllä toteutetut testit kattavat session luonnin, joinCode-pohjaisen participantin luonnin, sanasyötteen validoinnin, 25 merkin rajan, onnistuneen ja epäonnistuneen lähetyksen sekä käyttöliittymän tiloja. Kaikki suunnitelmassa mainitut logiikat eivät ole erillisiä testattavia moduuleja.
 
 ### End-to-end-testaus
 
-E2E-testissä käytetään erillistä Supabase-testiprojektia tai hallittua testiympäristöä:
+Cypress E2E-testeissä käytetään paikallista Next.js-kehitysympäristöä ja testisessioita:
 
 1. Avaa aloitussivu.
 2. Luo session.
-3. Avaa esittäjän näkymä ja varmista QR/linkki.
-4. Avaa osallistumislinkki toisessa selainkontekstissa.
+3. Avaa esittäjän näkymä.
+4. Liity reitillä `/join/<joinCode>`.
 5. Lähetä sallittu sana.
-6. Varmista onnistumispalaute ja Realtime-päivitys esittäjälle.
-7. Toista virheellisillä syötteillä ja olemattomalla session ID:llä.
+6. Varmista sanan näkyminen host-näkymässä.
+7. Toista tyhjällä ja whitespace-syötteellä.
+
+Nykyiset Cypress-testit kattavat session luonnin ja host-reitille siirtymisen, hostin tyhjän tilan, Reset-dialogin ja submissionien poiston, tyhjän ja whitespace-syötteen estämisen sekä E2E-03-polun: sessionin luonti, liittyminen `/join/<joinCode>`-reitillä, sanan lähetys ja sanan näkyminen host-näkymässä.
+
+Hostin session-nimen muokkauksen kolme testiä ovat `it.skip`-tilassa eli pending-testejä. Niitä ei merkitä epäonnistuneiksi, vaan ne kirjataan avoimeksi testivelaksi.
 
 ### Manuaalinen käyttäjätestaus
 
@@ -115,8 +122,8 @@ Havainnoidaan tehtävän ymmärrettävyyttä, palautteen riittävyyttä, linkin/
 | ID     | Testi                                                                              | Odotettu tulos                                                                                         | Prioriteetti |
 | ------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ |
 | SEC-01 | Lähetä HTML- tai JavaScript-merkkijono                                             | Sisältö käsitellään tekstinä; koodia ei suoriteta                                                      | P0           |
-| SEC-02 | Lähetä tyhjä, liian pitkä tai väärän session ID:n sisältävä pyyntö suoraan API:lle | RLS/tietokanta hylkää pyynnön eikä käyttöliittymä saa väärää onnistumista                              | P0           |
-| SEC-03 | Yritä lukea tai lisätä sanoja toiseen session ID:hen                               | Hyväksytty käyttäytyminen dokumentoidaan; vähintään käyttöliittymän session-eristys toteutuu           | P0           |
+| SEC-02 | Lähetä tyhjä, liian pitkä tai väärän participant ID:n sisältävä pyyntö suoraan API:lle | RLS/tietokanta hylkää pyynnön eikä käyttöliittymä saa väärää onnistumista                         | P0           |
+| SEC-03 | Yritä lukea tai lisätä sanoja toiseen sessioniin                               | Hyväksytty käyttäytyminen dokumentoidaan; vähintään käyttöliittymän session-eristys toteutuu           | P0           |
 | SEC-04 | Yritä ylittää 500 sanan session raja                                               | Lisäys estyy hallitusti                                                                                | P1           |
 | SEC-05 | Tarkista cascade-poisto testiympäristössä                                          | Session poisto poistaa siihen liittyvät sanat                                                          | P1           |
 | SEC-06 | Tarkista repository, build ja selainpaketti                                        | Salaisuuksia ei ole lähdekoodissa, Gitissä tai client bundleissa                                       | P0           |
@@ -124,9 +131,11 @@ Havainnoidaan tehtävän ymmärrettävyyttä, palautteen riittävyyttä, linkin/
 | SEC-08 | Lähetä suuri määrä pyyntöjä yhdestä clientistä                                     | Nykyinen riski kirjataan; ennen julkaisua päätetään rate limitingin tai CAPTCHA:n tarve                | P0           |
 | SEC-09 | Tarkista säilytys ja näkyvyys                                                      | Vain toiminnan kannalta tarpeelliset session- ja sanatiedot tallennetaan; säilytysaika on dokumentoitu | P1           |
 
-Nykyinen MVP on anonyymi ja sallii Supabasen julkiset luku-/kirjoitusoikeudet. Tämä on tietoinen riski, ei todiste opettajan hallintaoikeudesta. Admin-käyttöoikeuksia ei saa merkitä testatuksi ennen kuin autentikointi ja palvelinpuolen valtuutus on toteutettu.
+RLS- ja tietoturvatestit ovat edelleen suunniteltuja, eikä niitä merkitä toteutetuiksi tämän dokumentin testituloksen perusteella. Nykyinen MVP käyttää host_token-evästettä host-session tunnistamiseen, eikä admin-käyttöoikeuksia ole toteutettu.
 
 ## 6. Saavutettavuus ja yhteensopivuus
+
+Seuraavat tarkistukset ovat suunniteltuja, eivät toteutuneita automaattisia testejä:
 
 - Kaikki toiminnot ovat käytettävissä näppäimistöllä ja näkyvä kohdistus on havaittavissa.
 - Osallistujan kentällä on ohjelmallinen nimilappu, ohje ja virhepalaute.
@@ -138,6 +147,8 @@ Nykyinen MVP on anonyymi ja sallii Supabasen julkiset luku-/kirjoitusoikeudet. T
 - Tarkistetaan leveydet vähintään mobiili-, tabletti- ja työpöytänäkymässä.
 
 ## 7. Suorituskyky, palautuminen ja rajat
+
+Seuraavat testit ovat suunniteltuja tai testaamattomia:
 
 MVP:lle tehdään kevyt luokkakäytön kuormituskoe sovitulla käyttäjämäärällä. Tavoite ja raja kirjataan ennen testiä; yli tämän rajan tehtävä laaja kuormitustestaus ei kuulu ensimmäiseen hyväksyntään.
 
@@ -153,22 +164,29 @@ Testataan lisäksi:
 ## 8. Testiympäristö, data ja työkalut
 
 - Kehitys: localhost ja erillinen testitietokanta tai testi-sessionit.
-- Hyväksyntä: staging tai julkaistu testiversio, ei tuotantodataa.
-- Testidata: keinotekoiset sanat ja session ID:t; ei oikeita henkilötietoja.
-- Yksikkö-/integraatiotestit: Vitest nykyiseen SvelteKit/Vite-pinoon.
-- Selain- ja E2E-testit: Playwright, mukaan lukien selainkontekstit esittäjälle ja osallistujalle.
-- Saavutettavuus: selainkehitystyökalut ja tarvittaessa Playwrightiin liitettävä saavutettavuustarkistus.
+- Hyväksyntä: ei määritelty tässä testituloksessa; tuotantodataa ei käytetä.
+- Testidata: keinotekoiset sanat ja tunnisteet; ei oikeita henkilötietoja.
+- Yksikkö- ja komponenttitestit: Vitest, React Testing Library ja TypeScript.
+- Selain- ja E2E-testit: Cypress.
+- Saavutettavuus: selainkehitystyökalut ja tarvittaessa Cypressiin liitettävä saavutettavuustarkistus.
 - Raportointi: GitHub Issues, jossa testin ID, ympäristö, toistovaiheet, odotettu/toteutunut tulos ja kuvakaappaus tai loki.
 - CI: vähintään tyyppitarkistus, build, yksikkötestit ja sovitut kriittiset E2E-testit ennen hyväksyttävää julkaisua.
 
-Vitest- ja Playwright-riippuvuudet lisätään vasta toteutusvaiheessa. Hosting- ja framework-päätös voi muuttaa CI:n tai ympäristömuuttujien toteutusta, mutta ei tämän testikattavuuden tavoitteita.
+### 8.1 Toteutuneiden Cypress-testien tulokset
+
+**Komento:** `npm run cy:run`
+**Tulokset 20.10.2026:** 11 Cypress-testiä yhteensä, 8 passing, 3 pending, 0 failing.
+
+Pending-testit koskevat hostin session-nimen muokkausta. Niitä ei lasketa epäonnistuneiksi.
+
+Tässä suunnitelmassa ei esitetä testituloksia Vitestille, ellei niitä ole erikseen kirjattu testitulokseksi.
 
 ## 9. Riskit
 
 | Riski                                 | Vaikutus                                                     | Hallintatoimenpide                                                                              |
 | ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Julkinen anonyymi kirjoitus           | Roskaposti, vääristyneet tulokset ja kustannus-/kiintiöriski | Syöterajat, session rajat, rate limiting/CAPTCHA-päätös ja kuormitustesti                       |
-| Session ID:n arvaaminen tai jakaminen | Toisen session tietojen näkyminen                            | Session-eristystestit, tunnisteen elinkaari ja RLS:n uudelleenarviointi                         |
+| Session tunnisteen arvaaminen tai jakaminen | Toisen session tietojen näkyminen                            | Session-eristystestit, tunnisteen elinkaari ja RLS:n uudelleenarviointi                         |
 | Realtime- tai verkko-ongelma          | Oppimistilanne keskeytyy                                     | Virhepalaute, palautumistesti ja manuaalinen päivityspolku                                      |
 | Puuttuva syötteen validointi          | Virheellinen data tai XSS-riski                              | Selain- ja tietokantatason rajat sekä turvallinen tekstirenderöinti                             |
 | Liian aikainen hosting-valinta        | Kiintiöt tai korttivaatimus estävät käytön                   | Vertaile Vercel/Netlify/AWS/Supabase vasta sovittujen liikenne- ja kustannusrajojen perusteella |
@@ -176,16 +194,22 @@ Vitest- ja Playwright-riippuvuudet lisätään vasta toteutusvaiheessa. Hosting-
 
 ## 10. MVP:n hyväksymiskriteerit
 
-MVP voidaan hyväksyä, kun:
+Tämän testikierroksen perusteella voidaan todeta seuraavaa:
 
-- kaikki P0-testit ovat hyväksyttyjä
-- yhtään kriittistä tietoturva- tai tietosuojariskiä ei ole ratkaisematta tai hyväksytysti rajattu
-- session luonti, osallistumislinkki, sanan lähetys ja Realtime-päivitys toimivat päästä päähän
-- session sanat eivät sekoitu toisen session sanoihin
-- virheelliset syötteet ja yhteysvirheet antavat ymmärrettävän palautteen
-- sovitut selaimet, mobiilinäkymät ja näppäimistöpolut toimivat
-- testitulos, testiversio, ympäristö ja avoimet poikkeamat on kirjattu
-- valittu ilmainen hosting-kokonaisuus ei vaadi käyttäjältä luottokorttia ja sen kiintiöt riittävät sovittuun käyttöön
+### Toteutuneet testit
+
+- Cypressin toteutuneissa testeissä session luonti ja host-reitille siirtyminen toimivat.
+- Hostin tyhjä tila sekä Reset-dialogin ja submissionien poiston polku on testattu.
+- Tyhjän ja whitespace-syötteen estäminen on testattu.
+- E2E-03-polku kattaa session luonnin, liittymisen `/join/<joinCode>`-reitillä, sanan lähetyksen ja sanan näkymisen host-näkymässä.
+- Tuloksena oli 8 passing, 3 pending ja 0 failing Cypress-testiä.
+
+### Pending-testit ja testivelka
+
+- Hostin session-nimen muokkauksen kolme testiä ovat pending (`it.skip`), eivät epäonnistuneita.
+- QR-koodin sisällön automaattinen tarkistus, usean osallistujan samanaikaisuus, session-eristys usealla sessiolla, yhteyden katkeaminen ja palautuminen, kuormitus- ja bottisuojaustestit, RLS- ja tietoturvatestit sekä saavutettavuus- ja selain-/mobiiliyhteensopivuustestit ovat jatkotestauksen testivelkaa.
+
+Kaikkien P0-testien hyväksymistä, tietoturvariskien ratkaisemista, kaikkien sovittujen selainten toimivuutta tai hosting-kokonaisuuden riittävyyttä ei voida todeta tämän testikierroksen perusteella. MVP:n lopullinen hyväksyntä edellyttää avoimen testivelan ja suunniteltujen testien erillistä käsittelyä.
 
 ## 11. Jatkokehityksen testikehys
 
