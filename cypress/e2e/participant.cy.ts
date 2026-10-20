@@ -28,7 +28,7 @@ describe('E2E-02: Tyhjä syöte hylätään', () => {
             sessionId = body.id;
             joinCode = body.join_code;
 
-            cy.visit(`/user/${joinCode}`);
+            cy.visit(`/join/${joinCode}`);
         });
     });
 

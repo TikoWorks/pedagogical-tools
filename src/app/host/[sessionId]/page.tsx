@@ -1,12 +1,15 @@
-"use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import Image from "next/image";
-import HostGameHeader from "@/components/host/HostGameHeader";
-import HostGameFooter from "@/components/host/HostGameFooter";
-import WordCloud from "@/components/host/WordCloud";
-import ResetConfirmation from "@/components/host/ResetConfirmation";
-import type { Session, Submission } from "@/types";
+'use client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import HostGameHeader from '@/components/host/HostGameHeader';
+import HostGameFooter from '@/components/host/HostGameFooter';
+import WordCloud from '@/components/host/WordCloud';
+import ResetConfirmation from '@/components/host/ResetConfirmation';
+import LoadingMessage from '@/components/ui/LoadingMessage';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import Button from '@/components/ui/Button';
+import type { Session, Submission } from '@/types';
 
 type RawSubmission = {
   data: {
@@ -15,80 +18,63 @@ type RawSubmission = {
 };
 
 export default function HostPage() {
-  // Sessionin datan muuttuja
+  // Session
   const [sessionData, setSessionData] = useState<Session | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [sessionError, setSessionError] = useState('');
+
+  // Submissions
   const [submissionsData, setSubmissionsData] = useState<Submission[]>([]);
-  const [sessionName, setSessionName] = useState("");
-  const [sessionNameDraft, setSessionNameDraft] = useState("");
+  const [isLoadingWords, setIsLoadingWords] = useState(true);
+  const [wordsError, setWordsError] = useState('');
+
+  // Session name päivitys
+  const [sessionName, setSessionName] = useState('');
+  const [sessionNameDraft, setSessionNameDraft] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [saveNameError, setSaveNameError] = useState('');
+
+  // Reset
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
-  // virhetila latausvirheille. Aiemmin virhe heitettiin (throw)
-  // eikä sitä käsitelty, jolloin komponentti jäi loputtomaan Loading-tilaan.
-  const [loadError, setLoadError] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   // Session datan haku
   useEffect(() => {
-    // Peruutuslippu estää vanhentuneen vastauksen (Strict Moden kaksoisajo
-    // kehitystilassa) ylikirjoittamasta nimikenttää kesken muokkauksen.
-    let cancelled = false;
-
     async function getSessionData() {
       try {
-        const response = await fetch(`/api/session/`, {
-          method: "GET",
-        });
+        const response = await fetch('/api/session');
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch session: ${response.status} ${response.statusText}`,
-          );
+          throw new Error('Failed to fetch session');
         }
 
         const data = await response.json();
-
-        if (cancelled) {
-          return;
-        }
 
         setSessionData(data);
         setSessionName(data.name);
         setSessionNameDraft(data.name);
       } catch (error) {
-        console.error("getSessionData error: ", error);
-        // throw poistettu, virhe näytetään käyttäjälle.
-        if (!cancelled) {
-          setLoadError("Session could not be loaded.");
-        }
+        console.error('getSessionData error:', error);
+        setSessionError('Could not load session. Please try again.');
+      } finally {
+        setIsLoadingSession(false);
       }
     }
 
-    getSessionData();
-
-    return () => {
-      cancelled = true;
-    };
-
-    // Funktio ajetaan komponentin alustuksessa
+    void getSessionData();
   }, []);
 
-  // effectin riippuvuus on sessionId, ei koko sessionData-olio.
-  // Aiemmin jokainen nimenmuutos (setSessionData(updatedSession)) loi uuden
-  // olion, mikä haki submissionit uudelleen ja uudelleenluoi realtime-kanavan.
   const sessionId = sessionData?.id;
 
   useEffect(() => {
-    if (!sessionId) {
-      return;
-    }
-
-    // peruutuslippu myös submissioneille, jotta vanha GET-vastaus
-    // ei ylikirjoita tilaa, kun effect on jo siivottu.
-    let cancelled = false;
+    if (!sessionId) return;
 
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
-        const response = await fetch(`/api/submission/`, {
-          method: "GET",
+        const response = await fetch('/api/submission/', {
+          method: 'GET',
         });
 
         if (!response.ok) {
@@ -117,28 +103,26 @@ export default function HostPage() {
           }
         });
 
-        if (cancelled) {
-          return;
-        }
-
         setSubmissionsData(grouped);
       } catch (error) {
-        // throw poistettu, virhe vain lokiin (sanapilvi pysyy tyhjänä).
-        console.error("getSubmissionsData error: ", error);
+        console.error('getSubmissionsData error:', error);
+        setWordsError('Could not load words. Please try again.');
+      } finally {
+        setIsLoadingWords(false);
       }
     }
 
-    getSubmissionsData();
+    void getSubmissionsData();
 
     // Realtime-kuuntelu uusille submissioneille
     const channel = supabase
       .channel(`session:${sessionId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "submission",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'submission',
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
@@ -169,47 +153,25 @@ export default function HostPage() {
       .subscribe();
 
     return () => {
-      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [sessionId]);
 
-  // latausvirhe näytetään eikä jäädä loputtomaan Loading-tilaan.
-  if (loadError) {
-    return (
-      <div role="alert">
-        {loadError}{" "}
-        <button type="button" onClick={() => window.location.reload()}>
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  if (!sessionData) {
-    return <div>Loading...</div>;
-  }
-
-  // varavaihtoehto, jos NEXT_PUBLIC_APP_URL puuttuu. Aiemmin
-  // tuloksena oli "undefined/join/..." eli rikkinäinen QR-koodi.
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-  const joinUrl = `${appUrl}/join/${sessionData.join_code}`;
-
   // Session nimen vaihto
   async function updateSessionName(name: string) {
-    // ei lähetetä PATCH-kutsua, jos nimi ei ole muuttunut.
-    if (name.trim() === sessionName) {
-      return;
-    }
+    if (isSavingName) return;
+
+    setIsSavingName(true);
+    setSaveNameError('');
 
     try {
-      const response = await fetch("/api/session", {
-        method: "PATCH",
+      const response = await fetch('/api/session', {
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
         }),
       });
 
@@ -224,18 +186,23 @@ export default function HostPage() {
       setSessionName(updatedSession.name);
       setSessionNameDraft(updatedSession.name);
     } catch (error) {
-      console.error("updateSessionName error: ", error);
-      // Muokkaus epäonnistui, joten palautetaan luonnos
-      // tallennettuun nimeen. Näin kenttä ja otsikko eivät jää eri arvoihin.
-      setSessionNameDraft(sessionName);
+      console.error('updateSessionName error:', error);
+      setSaveNameError('Could not save session name. Please try again.');
+    } finally {
+      setIsSavingName(false);
     }
   }
 
   //Submissioneiden poistaminen
   async function resetSubmissions() {
+    if (isResetting) return;
+
+    setIsResetting(true);
+    setResetError('');
+
     try {
-      const response = await fetch("/api/submission", {
-        method: "DELETE",
+      const response = await fetch('/api/submission', {
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -247,9 +214,47 @@ export default function HostPage() {
       setSubmissionsData([]);
       setShowResetConfirmation(false);
     } catch (error) {
-      console.error("resetSubmissions error:", error);
+      console.error('resetSubmissions error:', error);
+      setResetError('Could not reset word cloud. Please try again.');
+    } finally {
+      setIsResetting(false);
     }
   }
+
+  // Näytetään latausviesti, kun istunnon tietoja haetaan
+  if (isLoadingSession) {
+    return (
+      <main className="flex h-dvh items-center justify-center bg-tumma">
+        <LoadingMessage
+          message="Loading session..."
+          className="text-[1.5rem]"
+        />
+      </main>
+    );
+  }
+
+  // Näytetään virheilmoitus ja mahdollisuus yrittää uudelleen
+  if (sessionError || !sessionData) {
+    return (
+      <main className="flex h-dvh flex-col items-center justify-center gap-6 bg-tumma">
+        <ErrorMessage
+          message={sessionError || 'Session not found.'}
+          className="text-[1.5rem]"
+        />
+
+        <Button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-40 bg-magenta hover:bg-[#AA0045]"
+        >
+          Try again
+        </Button>
+      </main>
+    );
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  const joinUrl = `${appUrl}/join/${sessionData.join_code}`;
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
@@ -257,14 +262,29 @@ export default function HostPage() {
 
       {showResetConfirmation && (
         <ResetConfirmation
-          onCancel={() => setShowResetConfirmation(false)}
+          onCancel={() => {
+            setResetError('');
+            setShowResetConfirmation(false);
+          }}
           onReset={resetSubmissions}
+          isResetting={isResetting}
+          resetError={resetError}
         />
       )}
       <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
-
-      {submissionsData.length === 0 ? (
-        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:pb-24 2xl:gap-6">
+      {isLoadingWords ? (
+        <section className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+          <LoadingMessage
+            message="Loading words..."
+            className="text-[1.5rem]"
+          />
+        </section>
+      ) : wordsError ? (
+        <section className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+          <ErrorMessage message={wordsError} className="text-[1.5rem]" />
+        </section>
+      ) : submissionsData.length === 0 ? (
+        <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:gap-6 2xl:pb-24">
           <Image
             className="h-40 w-40"
             src="/images/cloud.svg"
@@ -283,8 +303,13 @@ export default function HostPage() {
       )}
       <HostGameFooter
         sessionName={sessionNameDraft}
-        onSessionNameChange={setSessionNameDraft}
+        onSessionNameChange={(name) => {
+          setSessionNameDraft(name);
+          setSaveNameError('');
+        }}
         onSessionNameSave={updateSessionName}
+        isSavingName={isSavingName}
+        saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
       />
     </main>

@@ -1,4 +1,4 @@
-import HostHeader from './HostHeader';
+import WordCloudHeader from '../ui/WordCloudHeader';
 import QRCode from './QRCode';
 
 type HostGameHeaderProps = {
@@ -12,7 +12,7 @@ export default function HostGameHeader({
 }: HostGameHeaderProps) {
   return (
     <div className="relative z-10 flex items-start justify-between px-8 pt-6 2xl:px-20 2xl:pt-8">
-      <HostHeader />
+      <WordCloudHeader />
 
       <section className="bg-tumma flex h-32 w-fit max-w-120 flex-col items-center justify-center rounded-2xl px-6 text-center text-white 2xl:h-40 2xl:max-w-180 2xl:px-8">
         <h3 className="text-[1.75rem] leading-none 2xl:text-[2.25rem]">
