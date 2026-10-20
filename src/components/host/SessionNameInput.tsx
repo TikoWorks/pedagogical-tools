@@ -24,14 +24,15 @@ export default function SessionNameInput({
         if (isSavingName) return;
 
         const value = event.target.value;
+        const trimmedValue = value.trim();
 
-        if (!value.trim()) {
-            setError('Subject is required');
+        if (!trimmedValue) {
+            setError('Session name is required');
             return;
         }
 
         setError('');
-        await onSessionNameSave?.(value);
+        await onSessionNameSave?.(trimmedValue);
     }
 
     return (

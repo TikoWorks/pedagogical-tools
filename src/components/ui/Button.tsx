@@ -1,26 +1,20 @@
-import type { ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonProps = {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   className?: string;
   children: ReactNode;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
 };
 
 export default function Button({
-  className = '',
-  children,
-  onClick,
-  type = 'button',
-  disabled = false,
-}: ButtonProps) {
+                                 className = '',
+                                 children,
+                                 type = 'button',
+                                 ...props
+                               }: ButtonProps) {
   return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      className={`
+      <button
+          type={type}
+          className={`
         flex h-13 items-center justify-center
         gap-2 rounded-xl
         font-bold text-white
@@ -30,8 +24,9 @@ export default function Button({
         2xl:rounded-2xl 2xl:text-[1.75rem]
         ${className}
       `}
-    >
-      {children}
-    </button>
+          {...props}
+      >
+        {children}
+      </button>
   );
 }
