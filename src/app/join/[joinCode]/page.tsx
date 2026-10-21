@@ -15,6 +15,7 @@ export default function UserPage() {
   const [status, setStatus] = useState<Status>('input');
   const [error, setError] = useState('');
   const [isPaused, setIsPaused] = useState(false);
+  const [isEnded, setIsEnded] = useState(false);
 
   const { joinCode } = useParams<{ joinCode: string }>();
 
@@ -43,11 +44,9 @@ export default function UserPage() {
 
         setParticipantID(data.id);
         setIsPaused(data.state === 'paused');
+        setIsEnded(data.state === 'ended');
 
-        console.log('Session ID:', data.sessionId);
-        console.log('Initial state:', data.state);
         // Realtime kuuntelu state tilalle
-
         channel = supabase
           .channel(`session:${data.sessionId}`)
           .on(
@@ -59,19 +58,24 @@ export default function UserPage() {
               filter: `id=eq.${data.sessionId}`,
             },
             (payload) => {
-              console.log('Realtime payload:', payload);
-              console.log('New session state:', payload.new.state);
-
               setIsPaused(payload.new.state === 'paused');
+              setIsEnded(payload.new.state === 'ended');
             },
           )
-          .subscribe((status, err) => {
-            console.log('Realtime status:', status);
-
-            if (err) {
-              console.error('Realtime error:', err);
-            }
-          });
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
+              schema: 'public',
+              table: 'session',
+            },
+            (payload) => {
+              if (payload.old.id === data.sessionId) {
+                setIsEnded(true);
+              }
+            },
+          )
+          .subscribe();
       } catch (error) {
         if (cancelled) return;
 
@@ -92,10 +96,6 @@ export default function UserPage() {
       }
     };
   }, [joinCode]);
-
-  useEffect(() => {
-    console.log('UserPage isPaused:', isPaused);
-  }, [isPaused]);
 
   // Sanan lähettäminen
   async function handleAdd(e: React.SubmitEvent<HTMLFormElement>) {
@@ -131,21 +131,29 @@ export default function UserPage() {
 
   return (
     <main className="bg-paavari flex h-dvh w-full flex-col items-center overflow-hidden">
-      {status === 'input' && (
-        <SubmissionForm
-          inputWord={inputWord}
-          onWordChange={setInputWord}
-          onSubmit={handleAdd}
-          participantId={participantId}
-          error={error}
-          isPaused={isPaused}
-        />
-      )}
+      {isEnded ? (
+        <div className="flex h-full items-center justify-center">
+          <h1 className="text-4xl font-bold text-white">Game ended</h1>
+        </div>
+      ) : (
+        <>
+          {status === 'input' && (
+            <SubmissionForm
+              inputWord={inputWord}
+              onWordChange={setInputWord}
+              onSubmit={handleAdd}
+              participantId={participantId}
+              error={error}
+              isPaused={isPaused}
+            />
+          )}
 
-      {status === 'sending' && <SendingView />}
+          {status === 'sending' && <SendingView />}
 
-      {status === 'success' && (
-        <SuccessView onAddNewWord={() => setStatus('input')} />
+          {status === 'success' && (
+            <SuccessView onAddNewWord={() => setStatus('input')} />
+          )}
+        </>
       )}
     </main>
   );

@@ -19,7 +19,6 @@ export default function SubmissionForm({
   error,
   isPaused,
 }: SubmissionFormProps) {
-  console.log('Join page isPaused:', isPaused);
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col items-center pt-12">
       <WordCloudHeader />

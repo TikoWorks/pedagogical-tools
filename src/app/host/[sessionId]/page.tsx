@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import HostGameHeader from '@/components/host/HostGameHeader';
@@ -18,6 +19,7 @@ type RawSubmission = {
 };
 
 export default function HostPage() {
+  const router = useRouter();
   // Session
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
@@ -246,6 +248,24 @@ export default function HostPage() {
     }
   }
 
+  async function deleteSession() {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete submissions: ${response.status} ${response.statusText}`,
+        );
+      }
+      setSessionData(null);
+      router.push(`/`);
+    } catch (error) {
+      console.error('deleteSession error:', error);
+    }
+  }
+
   // Näytetään latausviesti, kun istunnon tietoja haetaan
   if (isLoadingSession) {
     return (
@@ -337,6 +357,7 @@ export default function HostPage() {
         saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
         handlePauseResume={handlePauseResume}
+        deleteSession={deleteSession}
       />
     </main>
   );
