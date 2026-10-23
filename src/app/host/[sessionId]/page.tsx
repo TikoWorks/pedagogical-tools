@@ -161,6 +161,13 @@ export default function HostPage() {
   async function updateSessionName(name: string) {
     if (isSavingName) return;
 
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      setSaveNameError('Session name is required');
+      return;
+    }
+
     setIsSavingName(true);
     setSaveNameError('');
 
@@ -171,13 +178,13 @@ export default function HostPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name.trim(),
+          name: trimmedName,
         }),
       });
 
       if (!response.ok) {
         throw new Error(
-          `Failed to update session: ${response.status} ${response.statusText}`,
+            `Failed to update session: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -253,7 +260,8 @@ export default function HostPage() {
     );
   }
 
-  const joinUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${sessionData.join_code}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  const joinUrl = `${appUrl}/join/${sessionData.join_code}`;
 
   return (
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">

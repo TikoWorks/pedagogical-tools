@@ -29,6 +29,7 @@ export default function SubmissionForm({
           <div className="relative">
             <input
               type="text"
+              data-testid="word-input"
               aria-label="Word"
               placeholder="Type here..."
               maxLength={25}
@@ -57,6 +58,7 @@ export default function SubmissionForm({
         </div>
 
         <Button
+          data-testid="send-word"
           type="submit"
           disabled={!inputWord.trim() || !participantId}
           className="mt-auto w-80 max-w-[calc(100vw-2rem)] !rounded-2xl bg-magenta py-3 disabled:bg-[#D4B4C4]"
