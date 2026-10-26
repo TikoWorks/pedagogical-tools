@@ -77,6 +77,7 @@ export default function Home() {
           </div>
 
           <Button
+            data-testid="start-session"
             type="submit"
             className={`
             w-50 bg-magenta enabled:hover:bg-[#AA0045]

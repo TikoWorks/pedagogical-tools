@@ -6,24 +6,29 @@ import { supabaseServer } from '@/lib/supabaseServer';
 
 export async function POST(request: Request) {
   const body = await request.json();
-  console.log(body);
-  console.log(body.joinCode);
 
+  // Tarkistetaan, että joinCode tuli pyynnössä ja että se ei ole tyhjä
   if (typeof body.joinCode !== 'string' || body.joinCode.trim() === '') {
     return Response.json({ error: 'Invalid join code' }, { status: 400 });
   }
 
-  // Haetaan session id ja state join coden perusteella kannasta
+  // Haetaan sessio join coden perusteella kannasta
   const { data: session, error: sessionError } = await supabaseServer
     .from('session')
     .select('id, state')
     .eq('join_code', body.joinCode.trim().toUpperCase())
-    .single();
+    .maybeSingle();
 
   if (sessionError) {
     return Response.json({ error: sessionError.message }, { status: 404 });
   }
 
+  // Jos join-koodilla ei löydy sessiota, palautetaan selkeä 404-virhe
+  if (!session) {
+    return Response.json({ error: 'Session not found' }, { status: 404 });
+  }
+
+  // Luodaan uusi participant löydettyyn sessioniin
   const { data, error } = await supabaseServer
     .from('participant')
     .insert({ session_id: session.id })
@@ -31,7 +36,6 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    console.log(error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 
