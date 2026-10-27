@@ -49,10 +49,10 @@ export default function Home() {
 
         <div className="flex flex-col items-center justify-center text-white pt-30">
           <h2 className="font-bold text-[3rem] 2xl:text-[4rem]">
-            Create a session
+            Create a cloud
           </h2>
           <p className="text-[1.5rem] 2xl:text-[2rem]">
-            Give your session a topic to get started
+            Give your cloud a topic to get started
           </p>
         </div>
 
