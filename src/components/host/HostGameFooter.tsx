@@ -69,7 +69,7 @@ export default function HostGameFooter({
         </Button>
       </div>
       <Button
-        className="ml-auto border-1 w-30 border-[#F562A1] hover:bg-tumma 2xl:w-55"
+        className="ml-auto border-1 w-30 border-[#F562A1] bg-paavari hover:bg-tumma 2xl:w-55"
         onClick={onCloseClick}
       >
         Close
