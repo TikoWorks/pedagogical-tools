@@ -31,7 +31,7 @@ export default function HostGameHeader({
       <section className="flex items-start gap-6">
         <div className="whitespace-nowrap">
           <Button
-            className={`mb-5 ml-20 w-75 border ${
+            className={`mb-5 ml-25 w-50 2xl:ml-20 2xl:w-75 border ${
               isPresentationView
                 ? 'border-magenta bg-magenta hover:border-[#AA0045] hover:bg-[#AA0045]'
                 : 'border-white/30 bg-tumma hover:border-[#F562A1]'

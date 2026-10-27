@@ -374,7 +374,7 @@ export default function HostPage() {
       ) : submissionsData.length === 0 ? (
         <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:gap-6 2xl:pb-24">
           <Image
-            className="h-55 w-55"
+            className="h-40 w-40 2xl:h-55 2xl:w-55"
             src="/images/cloud.svg"
             alt=""
             width={225}

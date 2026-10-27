@@ -27,7 +27,7 @@ export default function HostGameFooter({
 }: HostGameFooterProps) {
   return (
     <footer className="relative z-10 flex w-full items-center px-8 pb-12 2xl:px-20">
-      <div className="flex w-[60%] items-center justify-between gap-10">
+      <div className="flex w-[70%] items-center justify-between gap-6 2xl:gap-10 2xl:w-[60%]">
         <SessionNameInput
           sessionName={sessionName}
           onSessionNameChange={onSessionNameChange}
@@ -37,7 +37,7 @@ export default function HostGameFooter({
         />
 
         <Button
-          className="w-80 border-1 border-[#F562A1] hover:bg-tumma 2xl: w-100"
+          className="w-60 border-1 border-[#F562A1] hover:bg-tumma 2xl:w-100"
           onClick={onReset}
         >
           <Image
@@ -45,12 +45,12 @@ export default function HostGameFooter({
             alt=""
             width={25}
             height={25}
-            className="h-auto w-5 2xl: w-6"
+            className="h-auto w-5 2xl:w-6"
           />
           Reset
         </Button>
         <Button
-          className={`w-80 border 2xl:w-100 ${
+          className={`w-60 border 2xl:w-100 ${
             state === 'paused'
               ? 'border-magenta bg-magenta hover:border-[#AA0045] hover:bg-[#AA0045]'
               : 'border-[#F562A1] hover:bg-tumma'
@@ -62,14 +62,14 @@ export default function HostGameFooter({
             alt=""
             width={0}
             height={0}
-            className="h-auto w-7 2xl: w-8"
+            className="h-auto w-7 2xl:w-8"
           />
 
           <span>{state === 'paused' ? 'Resume' : 'Pause'}</span>
         </Button>
       </div>
       <Button
-        className="ml-auto border-1 w-55 border-[#F562A1] hover:bg-tumma"
+        className="ml-auto border-1 w-30 border-[#F562A1] hover:bg-tumma 2xl:w-55"
         onClick={onCloseClick}
       >
         Close
