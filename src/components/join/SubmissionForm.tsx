@@ -57,7 +57,9 @@ export default function SubmissionForm({
           </p>
 
           {isPaused && (
-            <p className="mt-3 text-center text-white">Game paused</p>
+            <p className="mt-3 text-center text-magenta text-[1.5rem]">
+              Game paused
+            </p>
           )}
           {error && <ErrorMessage message={error} className="mt-3" />}
         </div>

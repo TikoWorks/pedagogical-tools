@@ -26,7 +26,7 @@ export default function HostGameFooter({
   deleteSession,
 }: HostGameFooterProps) {
   return (
-    <footer className="relative z-10 flex w-150 items-center justify-between pb-12 gap-10 px-8 2xl:px-20 2xl:w-260">
+    <footer className="relative z-10 w-[70%] flex items-center justify-between pb-12 gap-10 px-8 2xl:px-20">
       <SessionNameInput
         sessionName={sessionName}
         onSessionNameChange={onSessionNameChange}
@@ -36,7 +36,7 @@ export default function HostGameFooter({
       />
 
       <Button
-        className="w-55 border-3 border-[#F562A1] hover:bg-tumma 2xl:w-80"
+        className="w-85 border-1 border-[#F562A1] hover:bg-tumma 2xl: w-105"
         onClick={onReset}
       >
         <Image
@@ -49,13 +49,25 @@ export default function HostGameFooter({
         Reset
       </Button>
       <Button
-        className="w-55 border-3 border-[#F562A1] hover:bg-tumma 2xl:w-75"
+        className={`w-85 border 2xl:w-105 ${
+          state === 'paused'
+            ? 'border-magenta bg-magenta hover:border-[#AA0045] hover:bg-[#AA0045]'
+            : 'border-[#F562A1] hover:bg-tumma'
+        }`}
         onClick={handlePauseResume}
       >
-        {state === 'paused' ? 'Resume' : 'Pause'}
+        <Image
+          src={state === 'paused' ? '/images/play.svg' : '/images/pause.svg'}
+          alt=""
+          width={0}
+          height={0}
+          className="h-auto w-7 2xl: w-8"
+        />
+
+        <span>{state === 'paused' ? 'Resume' : 'Pause'}</span>
       </Button>
       <Button
-        className="w-55 border-3 border-[#F562A1] hover:bg-tumma 2xl:w-70"
+        className="w-75 border-1 border-[#F562A1] hover:bg-tumma 2xl:w-95"
         onClick={deleteSession}
       >
         Quit
