@@ -80,7 +80,7 @@ export default function Home() {
             data-testid="start-session"
             type="submit"
             className={`
-            w-50 bg-magenta enabled:hover:bg-[#AA0045]
+            w-50 bg-magenta enabled:hover:bg-magenta-tumma
             2xl:w-75
             ${isLoading ? 'disabled:cursor-wait' : 'disabled:bg-[#D4B4C4] disabled:cursor-not-allowed'}`}
             disabled={!name.trim() || isLoading}

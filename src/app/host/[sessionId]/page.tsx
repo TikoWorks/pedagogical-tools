@@ -80,7 +80,7 @@ export default function HostPage() {
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
-        const response = await fetch('/api/submission/', {
+        const response = await fetch('/api/submission', {
           method: 'GET',
         });
 
@@ -281,7 +281,7 @@ export default function HostPage() {
       router.push(`/`);
     } catch (error) {
       console.error('deleteSession error:', error);
-      setCloseError('Could not close WorldCloud. Please try again.');
+      setCloseError('Could not close WordCloud. Please try again.');
     } finally {
       setIsClosing(false);
     }
@@ -311,7 +311,7 @@ export default function HostPage() {
         <Button
           type="button"
           onClick={() => window.location.reload()}
-          className="w-40 bg-magenta hover:bg-[#AA0045]"
+          className="w-40 bg-magenta hover:bg-magenta-tumma"
         >
           Try again
         </Button>
@@ -328,10 +328,9 @@ export default function HostPage() {
 
       {showCloseConfirmation && (
         <ConfirmationDialog
-          title="Close WorldCloud?"
+          title="Close WordCloud"
           message="This will permanently delete your word cloud."
-          imageSrc="/images/close.svg"
-          confirmText="Close"
+          confirmText="Confirm"
           loadingText="Closing..."
           onCancel={() => {
             setShowCloseConfirmation(false);
@@ -344,7 +343,7 @@ export default function HostPage() {
       )}
       {showResetConfirmation && (
         <ConfirmationDialog
-          title="Reset wold cloud?"
+          title="Reset word cloud?"
           message="This will remove all submitted words"
           imageSrc="/images/reset2.svg"
           confirmText="Reset"

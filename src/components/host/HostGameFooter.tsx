@@ -37,7 +37,7 @@ export default function HostGameFooter({
         />
 
         <Button
-          className="w-60 border-1 border-[#F562A1] hover:bg-tumma 2xl:w-100"
+          className="w-60 border-1 border-vaalea hover:bg-tumma 2xl:w-100"
           onClick={onReset}
         >
           <Image
@@ -52,8 +52,8 @@ export default function HostGameFooter({
         <Button
           className={`w-60 border 2xl:w-100 ${
             state === 'paused'
-              ? 'border-magenta bg-magenta hover:border-[#AA0045] hover:bg-[#AA0045]'
-              : 'border-[#F562A1] hover:bg-tumma'
+              ? 'border-magenta bg-magenta hover:border-tumma hover:bg-magenta-tumma'
+              : 'border-vaalea hover:bg-tumma'
           }`}
           onClick={handlePauseResume}
         >
@@ -69,7 +69,7 @@ export default function HostGameFooter({
         </Button>
       </div>
       <Button
-        className="ml-auto border-1 w-30 border-[#F562A1] bg-paavari hover:bg-tumma 2xl:w-55"
+        className="ml-auto border-1 w-30 border-vaalea bg-paavari hover:bg-tumma 2xl:w-55"
         onClick={onCloseClick}
       >
         Close

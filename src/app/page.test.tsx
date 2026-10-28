@@ -24,11 +24,11 @@ describe('Home', () => {
     render(<Home />);
 
     expect(
-      screen.getByRole('heading', { name: 'Create a session' }),
+      screen.getByRole('heading', { name: 'Create a cloud' }),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText('Give your session a topic to get started'),
+      screen.getByText('Give your cloud a topic to get started'),
     ).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();

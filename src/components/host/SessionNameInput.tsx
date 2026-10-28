@@ -53,7 +53,7 @@ export default function SessionNameInput({
 
       <input
         data-testid="session-name-input"
-        className="bg-tumma/50 h-13 w-full rounded-2xl border-1 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-[#F562A1] focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
+        className="bg-tumma/50 h-13 w-full rounded-2xl border-1 border-white/30 px-10 text-center text-[1.25rem] text-white focus:border-vaalea focus:outline-none 2xl:h-16 2xl:px-12 2xl:text-[1.75rem]"
         type="text"
         value={sessionName}
         onChange={(event) => {

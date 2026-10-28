@@ -33,8 +33,8 @@ export default function HostGameHeader({
           <Button
             className={`mb-5 ml-25 w-50 2xl:ml-20 2xl:w-75 border ${
               isPresentationView
-                ? 'border-magenta bg-magenta hover:border-[#AA0045] hover:bg-[#AA0045]'
-                : 'border-white/30 bg-tumma hover:border-[#F562A1]'
+                ? 'border-magenta bg-magenta hover:border-tumma hover:bg-magenta-tumma'
+                : 'border-white/30 bg-tumma hover:border-vaalea'
             }`}
             onClick={() => setIsPresentationView(!isPresentationView)}
           >

@@ -6,7 +6,7 @@ import Image from 'next/image';
 type ConfirmationDialogProps = {
   title: string;
   message: string;
-  imageSrc: string;
+  imageSrc?: string;
   confirmText: string;
   loadingText: string;
   onCancel: () => void;
@@ -32,15 +32,17 @@ export default function ConfirmationDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirmation-title"
-        className="bg-paavari flex flex-col items-center rounded-2xl border-2 border-white/50 p-6 text-[1.25rem] text-white 2xl:p-10 2xl:text-[1.75rem]"
+        className="bg-paavari flex w-95 flex-col items-center rounded-2xl border-2 border-white/50 p-6 text-[1.25rem] text-white 2xl:w-140 2xl:p-10 2xl:text-[1.75rem]"
       >
-        <Image
-          className="mb-4 h-auto w-16 2xl:mb-6 2xl:w-26"
-          src={imageSrc}
-          alt=""
-          width={103}
-          height={101}
-        />
+        {imageSrc && (
+          <Image
+            className="mb-4 h-auto w-16 2xl:mb-6 2xl:w-26"
+            src={imageSrc || ''}
+            alt=""
+            width={103}
+            height={101}
+          />
+        )}
 
         <h2
           id="confirmation-title"
@@ -49,7 +51,7 @@ export default function ConfirmationDialog({
           {title}
         </h2>
 
-        <p>{message}</p>
+        <p className="w-full text-center wrap-break-word">{message}</p>
 
         <div className="flex flex-col items-center gap-4 pt-6 2xl:pt-10">
           {error && (
@@ -59,9 +61,9 @@ export default function ConfirmationDialog({
             />
           )}
 
-          <div className="flex gap-8 2xl:gap-20">
+          <div className="flex gap-8">
             <Button
-              className="bg-paavari w-35 border-2 border-white enabled:hover:bg-tumma 2xl:w-50"
+              className="bg-paavari w-35 border-2 border-vaalea enabled:hover:bg-tumma 2xl:w-50"
               onClick={onCancel}
               disabled={isLoading}
             >
@@ -69,7 +71,7 @@ export default function ConfirmationDialog({
             </Button>
 
             <Button
-              className="bg-magenta w-35 enabled:hover:bg-[#AA0045] disabled:cursor-wait 2xl:w-50"
+              className="bg-magenta w-35 enabled:hover:bg-magenta-tumma disabled:cursor-wait 2xl:w-50"
               onClick={onConfirm}
               disabled={isLoading}
             >
