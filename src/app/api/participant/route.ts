@@ -12,16 +12,13 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid join code' }, { status: 400 });
   }
 
-  // Haetaan session join-koodin perusteella.
-  // maybeSingle() palauttaa nullin, jos sessiota ei löydy,
-  // eikä kaadu samalla tavalla kuin single().
+  // Haetaan sessio join coden perusteella kannasta
   const { data: session, error: sessionError } = await supabaseServer
     .from('session')
-    .select('id')
+    .select('id, state')
     .eq('join_code', body.joinCode.trim().toUpperCase())
     .maybeSingle();
 
-  // Jos tietokantakysely epäonnistuu, palautetaan virhe
   if (sessionError) {
     return Response.json({ error: sessionError.message }, { status: 404 });
   }
@@ -38,11 +35,16 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  // Jos participantin luonti epäonnistuu, palautetaan palvelinvirhe
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
-  // Palautetaan luotu participant onnistuneesti
-  return Response.json(data, { status: 201 });
+  return Response.json(
+    {
+      ...data,
+      sessionId: session.id,
+      state: session.state,
+    },
+    { status: 201 },
+  );
 }

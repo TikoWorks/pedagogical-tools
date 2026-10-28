@@ -16,6 +16,16 @@ vi.mock('next/image', () => ({
   ),
 }));
 
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    })),
+    removeChannel: vi.fn(),
+  },
+}));
+
 describe('UserPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

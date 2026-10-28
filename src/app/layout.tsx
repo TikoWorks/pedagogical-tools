@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'WorldCloud',
+  title: 'WordCloud',
   description: 'WordCloud application for presenter use.',
 };
 

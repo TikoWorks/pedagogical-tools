@@ -8,6 +8,7 @@ type SubmissionFormProps = {
   onSubmit: (event: React.SubmitEvent<HTMLFormElement>) => void;
   participantId: string;
   error: string;
+  isPaused: boolean;
 };
 
 export default function SubmissionForm({
@@ -16,6 +17,7 @@ export default function SubmissionForm({
   onSubmit,
   participantId,
   error,
+  isPaused,
 }: SubmissionFormProps) {
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col items-center pt-12">
@@ -54,13 +56,18 @@ export default function SubmissionForm({
             {inputWord.length}/25 characters
           </p>
 
+          {isPaused && (
+            <p className="mt-3 text-center text-magenta text-[1.5rem]">
+              Game paused
+            </p>
+          )}
           {error && <ErrorMessage message={error} className="mt-3" />}
         </div>
 
         <Button
           data-testid="send-word"
           type="submit"
-          disabled={!inputWord.trim() || !participantId}
+          disabled={!inputWord.trim() || !participantId || isPaused}
           className="mt-auto w-80 max-w-[calc(100vw-2rem)] !rounded-2xl bg-magenta py-3 disabled:bg-[#D4B4C4]"
         >
           Send

@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import HostGameHeader from '@/components/host/HostGameHeader';
 import HostGameFooter from '@/components/host/HostGameFooter';
 import WordCloud from '@/components/host/WordCloud';
-import ResetConfirmation from '@/components/host/ResetConfirmation';
+import ConfirmationDialog from '@/components/host/ConfirmationDialog';
 import LoadingMessage from '@/components/ui/LoadingMessage';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import Button from '@/components/ui/Button';
@@ -18,6 +19,7 @@ type RawSubmission = {
 };
 
 export default function HostPage() {
+  const router = useRouter();
   // Session
   const [sessionData, setSessionData] = useState<Session | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
@@ -38,6 +40,11 @@ export default function HostPage() {
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState('');
+
+  // Close
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [closeError, setCloseError] = useState('');
 
   // Session datan haku
   useEffect(() => {
@@ -73,7 +80,7 @@ export default function HostPage() {
     // Haetaan submissionit kannasta
     async function getSubmissionsData() {
       try {
-        const response = await fetch('/api/submission/', {
+        const response = await fetch('/api/submission', {
           method: 'GET',
         });
 
@@ -184,7 +191,7 @@ export default function HostPage() {
 
       if (!response.ok) {
         throw new Error(
-            `Failed to update session: ${response.status} ${response.statusText}`,
+          `Failed to update session: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -197,6 +204,32 @@ export default function HostPage() {
       setSaveNameError('Could not save session name. Please try again.');
     } finally {
       setIsSavingName(false);
+    }
+  }
+
+  // Session tauottaminen
+  async function handlePauseResume() {
+    if (!sessionData) return;
+
+    const newState = sessionData.state === 'active' ? 'paused' : 'active';
+
+    try {
+      const response = await fetch('/api/session', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ state: newState }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update session state');
+      }
+
+      const updatedSession = await response.json();
+      setSessionData(updatedSession);
+    } catch (error) {
+      console.error('handlePauseResume error:', error);
     }
   }
 
@@ -222,9 +255,35 @@ export default function HostPage() {
       setShowResetConfirmation(false);
     } catch (error) {
       console.error('resetSubmissions error:', error);
-      setResetError('Could not reset word cloud. Please try again.');
+      setResetError('Could not reset a cloud. Please try again.');
     } finally {
       setIsResetting(false);
+    }
+  }
+
+  // Session poistaminen
+  async function deleteSession() {
+    if (isClosing) return;
+
+    setIsClosing(true);
+    setCloseError('');
+    try {
+      const response = await fetch('/api/session', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete submissions: ${response.status} ${response.statusText}`,
+        );
+      }
+      setSessionData(null);
+      router.push(`/`);
+    } catch (error) {
+      console.error('deleteSession error:', error);
+      setCloseError('Could not close WordCloud. Please try again.');
+    } finally {
+      setIsClosing(false);
     }
   }
 
@@ -252,7 +311,7 @@ export default function HostPage() {
         <Button
           type="button"
           onClick={() => window.location.reload()}
-          className="w-40 bg-magenta hover:bg-[#AA0045]"
+          className="w-40 bg-magenta hover:bg-magenta-tumma"
         >
           Try again
         </Button>
@@ -267,17 +326,38 @@ export default function HostPage() {
     <main className="relative flex h-dvh w-full flex-col overflow-hidden">
       <div className="absolute -inset-0.5 bg-[url('/images/host_background.svg')] bg-size-[100%_100%] bg-no-repeat" />
 
-      {showResetConfirmation && (
-        <ResetConfirmation
+      {showCloseConfirmation && (
+        <ConfirmationDialog
+          title="Close WordCloud"
+          message="This will permanently delete your word cloud."
+          confirmText="Confirm"
+          loadingText="Closing..."
           onCancel={() => {
-            setResetError('');
-            setShowResetConfirmation(false);
+            setShowCloseConfirmation(false);
+            setCloseError('');
           }}
-          onReset={resetSubmissions}
-          isResetting={isResetting}
-          resetError={resetError}
+          onConfirm={deleteSession}
+          isLoading={isClosing}
+          error={closeError}
         />
       )}
+      {showResetConfirmation && (
+        <ConfirmationDialog
+          title="Reset word cloud?"
+          message="This will remove all submitted words"
+          imageSrc="/images/reset2.svg"
+          confirmText="Reset"
+          loadingText="Resetting..."
+          onCancel={() => {
+            setShowResetConfirmation(false);
+            setResetError('');
+          }}
+          onConfirm={resetSubmissions}
+          isLoading={isResetting}
+          error={resetError}
+        />
+      )}
+
       <HostGameHeader joinUrl={joinUrl} sessionName={sessionName} />
       {isLoadingWords ? (
         <section className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
@@ -293,11 +373,11 @@ export default function HostPage() {
       ) : submissionsData.length === 0 ? (
         <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center 2xl:gap-6 2xl:pb-24">
           <Image
-            className="h-40 w-40"
+            className="h-40 w-40 2xl:h-55 2xl:w-55"
             src="/images/cloud.svg"
             alt=""
-            width={200}
-            height={200}
+            width={225}
+            height={225}
           />
           <h2 className="text-[2rem] font-bold text-white 2xl:text-[3rem]">
             No words yet
@@ -310,6 +390,7 @@ export default function HostPage() {
       )}
       <HostGameFooter
         sessionName={sessionNameDraft}
+        state={sessionData.state}
         onSessionNameChange={(name) => {
           setSessionNameDraft(name);
           setSaveNameError('');
@@ -318,6 +399,8 @@ export default function HostPage() {
         isSavingName={isSavingName}
         saveNameError={saveNameError}
         onReset={() => setShowResetConfirmation(true)}
+        handlePauseResume={handlePauseResume}
+        onCloseClick={() => setShowCloseConfirmation(true)}
       />
     </main>
   );
