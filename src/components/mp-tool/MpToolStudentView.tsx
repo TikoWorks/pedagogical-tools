@@ -10,6 +10,7 @@ type MpToolStudentViewProps = {
     question: string;
     lowLabel: string;
     highLabel: string;
+    simulateError?: boolean;
 };
 
 const ratings: Rating[] = [1, 2, 3, 4, 5];
@@ -18,10 +19,12 @@ export default function MpToolStudentView({
                                               question,
                                               lowLabel,
                                               highLabel,
+                                              simulateError = false,
                                           }: MpToolStudentViewProps) {
     const [selectedRating, setSelectedRating] = useState<Rating | null>(null);
     const [submittedRating, setSubmittedRating] = useState<Rating | null>(null);
     const [status, setStatus] = useState<Status>('input');
+    const [error, setError] = useState('');
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -29,16 +32,29 @@ export default function MpToolStudentView({
         if (selectedRating === null || status !== 'input') return;
 
         const ratingToSubmit = selectedRating;
+        const shouldFail = simulateError;
 
+        setError('');
         setStatus('sending');
 
-        // Vain lähetyksen simulointi. Ei verkkokutsua tai tallennusta.
-        await new Promise<void>((resolve) => {
-            setTimeout(resolve, 600);
-        });
+        try {
+            // Vain testilähetys. Ei verkkokutsua tai tallennusta.
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, 600);
+            });
 
-        setSubmittedRating(ratingToSubmit);
-        setStatus('success');
+            if (shouldFail) {
+                throw new Error('Simulated submission failure');
+            }
+
+            setSubmittedRating(ratingToSubmit);
+            setStatus('success');
+        } catch {
+            setError(
+                'Test submission failed. Your selection was kept. Please try again.',
+            );
+            setStatus('input');
+        }
     }
 
     const isSending = status === 'sending';
@@ -108,6 +124,15 @@ export default function MpToolStudentView({
                                 : 'Submit vote'}
                     </button>
                 </form>
+
+                {error && (
+                    <p
+                        role="alert"
+                        className="mt-4 rounded-lg border border-red-700 bg-red-50 p-3 text-sm text-red-950"
+                    >
+                        {error}
+                    </p>
+                )}
 
                 <div role="status" aria-live="polite" className="mt-4">
                     {isSending && (
