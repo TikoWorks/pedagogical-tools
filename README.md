@@ -33,8 +33,8 @@ The application allows hosts to create activities and participants to join using
 Clone the repository and install dependencies:
 
 ```bash
-git clone <https://github.com/TikoWorks/pedagogical-tools.git>
-cd <pedagogical-tools>
+git clone https://github.com/TikoWorks/pedagogical-tools.git
+cd pedagogical-tools
 npm install
 ```
 
