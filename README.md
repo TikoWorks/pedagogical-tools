@@ -1,41 +1,53 @@
-# Pedagogical tools
+# Pedagogical Tools
 
-## Teknologiat
+A web application for interactive classroom activities and real-time collaboration.
+
+The application allows hosts to create activities and participants to join using a QR code
+
+## Features
+
+- Interactive word cloud
+- Real-time responses
+- QR code access
+- No account required for participants
+- Session controls and presentation view
+- Responsive interface
+
+## Technologies
 
 - Next.js
+- React
 - TypeScript
+- Tailwind CSS
 - Supabase
 - PostgreSQL
-- Supabase Realtime
-- Vitest
-- Cypress
 
-## Kehitysympäristön pystytys
+### Requirements
 
-### 1. Kloonaa repository
+- Node.js and npm
+- A Supabase project
+- Supabase CLI (for database migrations)
 
-git clone https://github.com/TikoWorks/pedagogical-tools.git
+## Getting Started
 
-cd pedagogical-tools
+Clone the repository and install dependencies:
 
-### 2. Asenna riippuvuudet
-
+```bash
+git clone <https://github.com/TikoWorks/pedagogical-tools.git>
+cd <pedagogical-tools>
 npm install
+```
 
-### 3. Ympäristömuuttujat
+Configure the required environment variables in `.env.local`.
 
-Luo projektin juureen `.env.local` `.env.example`-tiedoston pohjalta.
+Start the development server:
 
-Tarvittavat Supabase-arvot saat tiimiltä.
-
-### 4. Käynnistä sovellus
-
+```bash
 npm run dev
+```
 
-Sovellus käynnistyy oletuksena osoitteeseen `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Supabase
+## License
 
-Sovellus käyttää yhteistä Supabase-kehitysprojektia. Next.js-yhteys Supabaseen on valmiiksi konfiguroitu.
-
-Supabase CLI:tä tai Supabase Dashboard -käyttöoikeutta ei tarvita tavalliseen frontend-kehitykseen tai sovelluksen ajamiseen.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
