@@ -1,8 +1,8 @@
 # Pedagogical Tools
 
-A web application for interactive classroom activities and real-time collaboration.
+Pedagogical Tools is a web-based platform for interactive learning activities. It enables hosts to engage groups through shared activities that participants can access directly from their own devices.
 
-The application allows hosts to create activities and participants to join using a QR code
+The platform currently features a real-time word cloud, where participants can submit responses and see them appear on a shared display. Hosts can manage the activity and control when responses are collected.
 
 ## Features
 
